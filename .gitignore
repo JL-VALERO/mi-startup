@@ -1,0 +1,39 @@
+# Material del curso / interno — NO publicar en el repo
+Instrucciones/
+
+# Secretos — NUNCA subir
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Modelos / datos pesados
+*.onnx
+*.pt
+*.pth
+*.safetensors
+data/raw/
+*.db
+*.sqlite3
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Notebooks
+.ipynb_checkpoints/
