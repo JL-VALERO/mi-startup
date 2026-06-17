@@ -17,12 +17,15 @@ jobs:
         with:
           python-version: "3.11"
 
+      # Instalamos solo lo necesario para lint + tests del contrato del API.
+      # PaddleOCR/paddlepaddle (pesados) NO se instalan: el OCR real se valida
+      # a mano. Los imports pesados son perezosos, así que los tests no los necesitan.
       - name: Install lint + test tools
-        run: pip install ruff pytest
+        run: pip install ruff pytest fastapi httpx python-multipart
 
       - name: Lint (ruff)
-        run: ruff check . || true   # no rompe el build mientras el repo está en arranque
+        run: ruff check . || true   # no rompe el build mientras el repo arranca
 
       - name: Run tests
-        run: |
-          if [ -d backend/tests ]; then pytest backend/tests; else echo "sin tests aún"; fi
+        working-directory: backend
+        run: pytest tests -q

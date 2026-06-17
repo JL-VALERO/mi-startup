@@ -60,6 +60,10 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+> **GPU opcional (solo local):** por defecto PaddleOCR corre en CPU (igual que en el deploy de
+> Render). Si tienes GPU NVIDIA y quieres acelerar, sigue `backend/requirements-gpu.txt` y pon
+> `USE_GPU=true` en tu `.env`.
+
 ## Demo desplegado
 🔗 **URL pública:** _(pendiente — Día 3)_
 🎥 **Video demo (2–3 min):** ver `docs/video_demo.md`
