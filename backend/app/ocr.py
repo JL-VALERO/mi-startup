@@ -7,15 +7,21 @@ instalados — esto mantiene el CI ligero y rápido.
 """
 from functools import lru_cache
 
-from .config import OCR_LANG
+from .config import OCR_LANG, USE_GPU
 
 
 @lru_cache(maxsize=1)
 def _get_ocr():
-    """Devuelve una instancia única de PaddleOCR (carga perezosa + cache)."""
+    """Devuelve una instancia única de PaddleOCR (carga perezosa + cache).
+
+    Usa GPU solo si USE_GPU=true Y hay un build paddlepaddle-gpu instalado;
+    si no, PaddleOCR cae a CPU automáticamente.
+    """
     from paddleocr import PaddleOCR
 
-    return PaddleOCR(use_angle_cls=True, lang=OCR_LANG, show_log=False)
+    return PaddleOCR(
+        use_angle_cls=True, lang=OCR_LANG, use_gpu=USE_GPU, show_log=False
+    )
 
 
 def _image_bytes_to_array(data: bytes):

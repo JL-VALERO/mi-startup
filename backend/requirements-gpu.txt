@@ -1,0 +1,19 @@
+# Requisitos para correr PaddleOCR en GPU EN LOCAL (opcional).
+# El deploy (Render) NO tiene GPU: allí se usa requirements.txt (CPU). No mezclar.
+#
+# Pasos:
+#   1) Instala el resto de dependencias normales:
+#        pip install -r requirements.txt
+#   2) Desinstala el build CPU y pon el de GPU acorde a TU versión de CUDA.
+#      El wheel de GPU depende de tu CUDA; usa el selector oficial:
+#        https://www.paddlepaddle.org.cn/install/quick
+#      Ejemplo (CUDA 11.8, Windows):
+#        pip uninstall -y paddlepaddle
+#        python -m pip install paddlepaddle-gpu==2.6.1.post118 \
+#          -f https://www.paddlepaddle.org.cn/whl/windows/mkl/avx/stable.html
+#   3) Activa la GPU:  en .env -> USE_GPU=true
+#   4) Verifica:       python -c "import paddle; paddle.utils.run_check()"
+#
+# Nota: tu RTX 3050 Ti (4 GB) es suficiente para inferencia de OCR.
+
+paddlepaddle-gpu  # versión exacta según tu CUDA (ver instrucciones arriba)
