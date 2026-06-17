@@ -22,29 +22,32 @@ te genera un **simulacro con el estilo de preguntas de ESE profesor**.
 - **Moat:** dataset propio por *(profesor × curso)*. Cada examen subido mejora la predicción para el
   siguiente alumno de ese profesor → efecto de red difícil de copiar.
 
-## Arquitectura
+## Arquitectura — lector híbrido
 ```
-[Foto/PDF de apuntes] --> Frontend (Streamlit)
-                               |
-                               v
-                     Backend (FastAPI / Render)
-                       |                    |
-                       v                    v
-                 PaddleOCR            Claude API
-              (texto manuscrito)  (extrae temas + genera
-                                   simulacro estilo profesor)
-                               |
-                               v
-                     BD (profesor x curso x exámenes)  <-- semilla del moat
+[Foto de apuntes] --> Frontend (Streamlit)
+                           |
+                           v
+                 Backend (FastAPI / Render)
+        manuscrito/pizarra |        | impreso/PDF        | generación
+                           v        v                    v
+                   Claude visión  PaddleOCR        Claude API
+                   (/transcribe)  (/ocr)           (/generate -> simulacro)
+                           |
+                           v
+                 BD (profesor x curso x exámenes)  <-- semilla del moat
 ```
 Diagrama detallado en `docs/arquitectura.png`.
+
+> **Por qué híbrido:** PaddleOCR es excelente con texto **impreso** (gratis, sin tokens) pero
+> falla con **letra a mano / pizarra**; ahí Claude visión lee mucho mejor. Enrutamos cada tipo
+> de material a la herramienta adecuada.
 
 ## Herramientas del curso usadas (≥2 obligatorias)
 | Herramienta | Lectura | Dónde en el código | Por qué |
 |---|---|---|---|
-| **PaddleOCR** | 14 | `backend/app/` (endpoint `/ocr`) | OCR de apuntes a mano / foto de pizarra en español, gratis |
-| **Claude API** | 14 | `ai/` + `backend/app/` (endpoint `/generate`) | Extracción estructurada + generación de preguntas al estilo del profesor |
-| **crewAI** *(opcional)* | 10–11 | `ai/agents/` | Orquestar pipeline: extraer → analizar estilo → generar → corregir |
+| **Claude API (visión + generación)** | 14 | `backend/app/claude_client.py` (`/transcribe`, `/generate`) | Lee manuscrito/pizarra y genera el simulacro al estilo del profesor |
+| **PaddleOCR** | 14 | `backend/app/ocr.py` (`/ocr`) | OCR de material impreso/PDF en español, gratis y sin costo de tokens |
+| **crewAI** *(opcional)* | 10–11 | `ai/agents/` | Orquestar pipeline: leer → analizar estilo → generar → corregir |
 
 ## Cómo correr (local)
 
