@@ -47,18 +47,34 @@ Diagrama detallado en `docs/arquitectura.png`.
 | **crewAI** *(opcional)* | 10–11 | `ai/agents/` | Orquestar pipeline: extraer → analizar estilo → generar → corregir |
 
 ## Cómo correr (local)
+
+> **Entorno:** este proyecto se ejecuta en el conda env **`geo`** (Python **3.10.20**), que ya
+> incluye `paddlepaddle 2.6.1`, `paddleocr 2.7.3` y `numpy 1.26`. **Actívalo en cada terminal
+> antes de instalar o correr** (el prompt debe pasar de `(base)` a `(geo)`):
+> ```bash
+> conda activate geo
+> ```
+> Como `geo` ya trae el stack de PaddleOCR, el `backend/requirements.txt` incluye **solo las
+> dependencias web** (FastAPI, etc.) y usa rangos para no degradar lo que `geo` ya tiene. El
+> stack de OCR vive aparte en `backend/requirements-ocr.txt` (solo para deploy / entorno fresco).
+
 ```bash
-# Backend
+# Backend (terminal 1, con `geo` activo)
 cd backend
-pip install -r requirements.txt
-cp ../.env.example ../.env   # y completa ANTHROPIC_API_KEY
+pip install -r requirements.txt        # solo deps web; `geo` ya trae PaddleOCR
+cp ../.env.example ../.env             # completa ANTHROPIC_API_KEY (necesario desde el Día 2)
 uvicorn app.main:app --reload
 
-# Frontend (otra terminal)
+# Frontend (terminal 2, con `geo` activo)
 cd frontend
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+> **En un entorno FRESCO o el deploy (Render):** instala además el stack de OCR:
+> ```bash
+> pip install -r backend/requirements-ocr.txt
+> ```
 
 > **GPU opcional (solo local):** por defecto PaddleOCR corre en CPU (igual que en el deploy de
 > Render). Si tienes GPU NVIDIA y quieres acelerar, sigue `backend/requirements-gpu.txt` y pon

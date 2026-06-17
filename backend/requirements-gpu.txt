@@ -1,9 +1,12 @@
 # Requisitos para correr PaddleOCR en GPU EN LOCAL (opcional).
-# El deploy (Render) NO tiene GPU: allí se usa requirements.txt (CPU). No mezclar.
+# El deploy (Render) NO tiene GPU: allí se usa el CPU de requirements-ocr.txt. No mezclar.
+#
+# Nota: el conda env `geo` ya trae paddlepaddle CPU. Esto es solo si quieres GPU.
 #
 # Pasos:
-#   1) Instala el resto de dependencias normales:
+#   1) Instala las deps web y el stack de OCR CPU base:
 #        pip install -r requirements.txt
+#        pip install -r requirements-ocr.txt   # (en `geo` ya está; omitir)
 #   2) Desinstala el build CPU y pon el de GPU acorde a TU versión de CUDA.
 #      El wheel de GPU depende de tu CUDA; usa el selector oficial:
 #        https://www.paddlepaddle.org.cn/install/quick

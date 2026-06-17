@@ -1,0 +1,13 @@
+# Stack de PaddleOCR (línea 2.x; la 3.x cambió toda la API -> por eso <3).
+#
+# IMPORTANTE: el conda env `geo` YA trae estas librerías (paddlepaddle 2.6.1,
+# paddleocr 2.7.3, numpy 1.26, opencv). En LOCAL con `geo` NO instales este
+# archivo: lo degradarías. Úsalo solo en entornos FRESCOS / deploy (Render),
+# donde el stack de OCR no está preinstalado.
+#
+# Nota: paddlepaddle 2.6.1 fue retirado de PyPI; en un entorno fresco se
+# instalará 2.6.2 (patch compatible).
+
+paddlepaddle>=2.6,<3
+paddleocr>=2.7,<3
+numpy<2          # paddlepaddle 2.x NO es compatible con numpy 2.x

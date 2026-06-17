@@ -1,4 +1,6 @@
-streamlit==1.38.0
-requests==2.32.3
-python-dotenv==1.0.1
-Pillow==10.4.0
+# Frontend Streamlit de Rendir.ai. Entorno objetivo: conda env `geo` (Python 3.10.20).
+# Rangos (>=) para no degradar lo que `geo` ya trae (streamlit 1.56, Pillow 11, etc.).
+streamlit>=1.38
+requests>=2.31
+python-dotenv>=1.0
+Pillow>=10
