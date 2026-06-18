@@ -15,7 +15,21 @@ try:
 except ImportError:
     pass
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+def _resolve_backend_url() -> str:
+    """Prioridad: secret de Streamlit Cloud -> variable de entorno -> localhost.
+
+    Streamlit Community Cloud entrega los secrets vía `st.secrets`, no siempre
+    como variable de entorno; por eso se lee primero de ahí.
+    """
+    try:
+        if "BACKEND_URL" in st.secrets:
+            return st.secrets["BACKEND_URL"]
+    except Exception:  # noqa: BLE001 -- st.secrets lanza si no hay secrets configurados
+        pass
+    return os.getenv("BACKEND_URL", "http://localhost:8000")
+
+
+BACKEND_URL = _resolve_backend_url()
 
 st.set_page_config(page_title="Rendir.ai", page_icon="📝", layout="centered")
 
