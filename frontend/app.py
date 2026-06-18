@@ -26,7 +26,10 @@ def _resolve_backend_url() -> str:
             return st.secrets["BACKEND_URL"]
     except Exception:  # noqa: BLE001 -- st.secrets lanza si no hay secrets configurados
         pass
-    return os.getenv("BACKEND_URL", "http://localhost:8000")
+    # Default = URL pública del backend en Render, para que el demo desplegado
+    # funcione AUNQUE no se configure el secret/env. Para apuntar a un backend
+    # local, define BACKEND_URL=http://localhost:8000 (secret de Streamlit o env).
+    return os.getenv("BACKEND_URL", "https://rendir-ai-backend.onrender.com")
 
 
 BACKEND_URL = _resolve_backend_url()
