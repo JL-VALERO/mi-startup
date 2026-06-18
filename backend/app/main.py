@@ -51,6 +51,15 @@ async def ocr(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="El archivo está vacío.")
     try:
         return extract_text(data)
+    except ModuleNotFoundError as exc:
+        # En el deploy "solo-Claude" no se instala PaddleOCR a propósito.
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "OCR de impresos (PaddleOCR) no disponible en este despliegue. "
+                "Usa el modo Manuscrito / pizarra (Claude visión)."
+            ),
+        ) from exc
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Error en OCR: {exc}") from exc
 
