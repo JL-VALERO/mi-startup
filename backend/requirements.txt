@@ -1,12 +1,19 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-python-multipart==0.0.9
-python-dotenv==1.0.1
-anthropic==0.39.0
-paddleocr==2.8.1
-paddlepaddle==2.6.1
-Pillow==10.4.0
-pydantic==2.9.2
-SQLAlchemy==2.0.35
-pytest==8.3.3
-httpx==0.27.2
+# Dependencias de la APP del backend de Rendir.ai (FastAPI + utilidades).
+# Entorno objetivo: conda env `geo` (Python 3.10.20).
+#
+# Este archivo NO incluye el stack de PaddleOCR a propósito: el env `geo` ya
+# trae paddlepaddle 2.6.1 / paddleocr 2.7.3 / numpy 1.26 / opencv, y reinstalarlos
+# los degradaría. El stack de OCR está en requirements-ocr.txt (solo para
+# entornos frescos / deploy). Todo lo de aquí es seguro de instalar en `geo`
+# (no degrada Pillow 11, pydantic 2.13, httpx 0.28, etc.).
+
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.7
+anthropic>=0.39
+python-dotenv>=1.0
+Pillow>=10
+SQLAlchemy>=2.0
+pytest>=8
+httpx>=0.27

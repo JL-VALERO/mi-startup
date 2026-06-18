@@ -22,43 +22,62 @@ te genera un **simulacro con el estilo de preguntas de ESE profesor**.
 - **Moat:** dataset propio por *(profesor × curso)*. Cada examen subido mejora la predicción para el
   siguiente alumno de ese profesor → efecto de red difícil de copiar.
 
-## Arquitectura
+## Arquitectura — lector híbrido
 ```
-[Foto/PDF de apuntes] --> Frontend (Streamlit)
-                               |
-                               v
-                     Backend (FastAPI / Render)
-                       |                    |
-                       v                    v
-                 PaddleOCR            Claude API
-              (texto manuscrito)  (extrae temas + genera
-                                   simulacro estilo profesor)
-                               |
-                               v
-                     BD (profesor x curso x exámenes)  <-- semilla del moat
+[Foto de apuntes] --> Frontend (Streamlit)
+                           |
+                           v
+                 Backend (FastAPI / Render)
+        manuscrito/pizarra |        | impreso/PDF        | generación
+                           v        v                    v
+                   Claude visión  PaddleOCR        Claude API
+                   (/transcribe)  (/ocr)           (/generate -> simulacro)
+                           |
+                           v
+                 BD (profesor x curso x exámenes)  <-- semilla del moat
 ```
 Diagrama detallado en `docs/arquitectura.png`.
+
+> **Por qué híbrido:** PaddleOCR es excelente con texto **impreso** (gratis, sin tokens) pero
+> falla con **letra a mano / pizarra**; ahí Claude visión lee mucho mejor. Enrutamos cada tipo
+> de material a la herramienta adecuada.
 
 ## Herramientas del curso usadas (≥2 obligatorias)
 | Herramienta | Lectura | Dónde en el código | Por qué |
 |---|---|---|---|
-| **PaddleOCR** | 14 | `backend/app/` (endpoint `/ocr`) | OCR de apuntes a mano / foto de pizarra en español, gratis |
-| **Claude API** | 14 | `ai/` + `backend/app/` (endpoint `/generate`) | Extracción estructurada + generación de preguntas al estilo del profesor |
-| **crewAI** *(opcional)* | 10–11 | `ai/agents/` | Orquestar pipeline: extraer → analizar estilo → generar → corregir |
+| **Claude API (visión + generación)** | 14 | `backend/app/claude_client.py` (`/transcribe`, `/generate`) | Lee manuscrito/pizarra y genera el simulacro al estilo del profesor |
+| **PaddleOCR** | 14 | `backend/app/ocr.py` (`/ocr`) | OCR de material impreso/PDF en español, gratis y sin costo de tokens |
+| **crewAI** *(opcional)* | 10–11 | `ai/agents/` | Orquestar pipeline: leer → analizar estilo → generar → corregir |
 
 ## Cómo correr (local)
+
+> **Entorno:** este proyecto se ejecuta en el conda env **`geo`** (Python **3.10.20**), que ya
+> incluye `paddlepaddle 2.6.1`, `paddleocr 2.7.3` y `numpy 1.26`. **Actívalo en cada terminal
+> antes de instalar o correr** (el prompt debe pasar de `(base)` a `(geo)`):
+> ```bash
+> conda activate geo
+> ```
+> Como `geo` ya trae el stack de PaddleOCR, el `backend/requirements.txt` incluye **solo las
+> dependencias web** (FastAPI, etc.) y usa rangos para no degradar lo que `geo` ya tiene. El
+> stack de OCR vive aparte en `backend/requirements-ocr.txt` (solo para deploy / entorno fresco).
+
 ```bash
-# Backend
+# Backend (terminal 1, con `geo` activo)
 cd backend
-pip install -r requirements.txt
-cp ../.env.example ../.env   # y completa ANTHROPIC_API_KEY
+pip install -r requirements.txt        # solo deps web; `geo` ya trae PaddleOCR
+cp ../.env.example ../.env             # completa ANTHROPIC_API_KEY (necesario desde el Día 2)
 uvicorn app.main:app --reload
 
-# Frontend (otra terminal)
+# Frontend (terminal 2, con `geo` activo)
 cd frontend
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+> **En un entorno FRESCO o el deploy (Render):** instala además el stack de OCR:
+> ```bash
+> pip install -r backend/requirements-ocr.txt
+> ```
 
 > **GPU opcional (solo local):** por defecto PaddleOCR corre en CPU (igual que en el deploy de
 > Render). Si tienes GPU NVIDIA y quieres acelerar, sigue `backend/requirements-gpu.txt` y pon

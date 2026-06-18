@@ -1,7 +1,7 @@
 """Rendir.ai — frontend Streamlit.
 
-Día 1: sube una foto de apuntes y extrae el texto con PaddleOCR (backend /ocr).
-Día 2: el botón "Generar simulacro" llamará a /generate (Claude API).
+Flujo: sube apuntes -> lee (Claude visión para manuscrito/pizarra, PaddleOCR para
+impreso) -> edita el texto -> genera un simulacro de preguntas al estilo del profe.
 """
 import os
 
@@ -26,42 +26,72 @@ with st.form("entrada"):
     col1, col2 = st.columns(2)
     curso = col1.text_input("Curso", placeholder="Ej. Microeconomía II")
     profesor = col2.text_input("Profesor", placeholder="Ej. A. Quispe")
+
+    tipo = st.radio(
+        "Tipo de material",
+        ["Manuscrito / pizarra (Claude visión)", "Impreso / PDF (PaddleOCR)"],
+        help="El manuscrito y la pizarra los lee Claude visión; lo impreso, PaddleOCR.",
+    )
     apuntes = st.file_uploader(
         "Sube una foto de tus apuntes (PNG o JPG)", type=["png", "jpg", "jpeg"]
     )
-    extraer = st.form_submit_button("📷 Extraer texto de mis apuntes (OCR)")
+    leer = st.form_submit_button("📷 Leer mis apuntes")
 
-if extraer:
+if leer:
     if apuntes is None:
         st.warning("Primero sube una imagen de tus apuntes.")
     else:
-        with st.spinner("Leyendo tus apuntes con PaddleOCR..."):
+        endpoint = "/transcribe" if tipo.startswith("Manuscrito") else "/ocr"
+        with st.spinner(f"Leyendo tus apuntes ({'Claude visión' if endpoint == '/transcribe' else 'PaddleOCR'})..."):
             try:
                 files = {"file": (apuntes.name, apuntes.getvalue(), apuntes.type)}
-                resp = requests.post(f"{BACKEND_URL}/ocr", files=files, timeout=180)
+                resp = requests.post(f"{BACKEND_URL}{endpoint}", files=files, timeout=180)
                 resp.raise_for_status()
                 data = resp.json()
                 st.session_state["ocr_text"] = data["text"]
-                st.success(
-                    f"✅ Texto extraído: {data['num_lines']} líneas · "
-                    f"confianza media {data['avg_confidence']:.0%}"
-                )
+                if data.get("topics"):
+                    st.caption("Temas detectados: " + ", ".join(data["topics"]))
+                st.success("✅ Texto leído. Revísalo abajo y genera tu simulacro.")
             except requests.exceptions.ConnectionError:
                 st.error(
                     f"No pude conectar con el backend en {BACKEND_URL}. "
                     "¿Está corriendo `uvicorn app.main:app`?"
                 )
             except Exception as exc:  # noqa: BLE001
-                st.error(f"Error al procesar la imagen: {exc}")
+                st.error(f"Error al leer la imagen: {exc}")
 
 if "ocr_text" in st.session_state:
     st.text_area(
-        "Texto detectado (puedes editarlo antes de generar el simulacro)",
+        "Texto de tus apuntes (puedes editarlo antes de generar)",
         key="ocr_text",
-        height=300,
+        height=250,
     )
-    st.button(
-        "🧠 Generar simulacro al estilo del profe (Día 2)",
-        disabled=True,
-        help="Disponible en el Día 2: conexión a Claude API (/generate).",
+    examen_pasado = st.text_area(
+        "Examen pasado del profe (opcional — mejora el estilo)",
+        placeholder="Pega aquí preguntas de exámenes anteriores de este profesor, si tienes.",
+        height=120,
     )
+    n = st.slider("Número de preguntas", 3, 10, 5)
+
+    if st.button("🧠 Generar simulacro al estilo del profe"):
+        with st.spinner("Generando preguntas con Claude..."):
+            try:
+                payload = {
+                    "content": st.session_state["ocr_text"],
+                    "curso": curso,
+                    "profesor": profesor,
+                    "past_exam_text": examen_pasado or None,
+                    "n": n,
+                }
+                resp = requests.post(f"{BACKEND_URL}/generate", json=payload, timeout=180)
+                resp.raise_for_status()
+                preguntas = resp.json()["preguntas"]
+                st.success(f"✅ {len(preguntas)} preguntas generadas")
+                for i, p in enumerate(preguntas, 1):
+                    with st.expander(f"Pregunta {i} — {p.get('tema', '')}"):
+                        st.markdown(f"**{p['pregunta']}**")
+                        st.caption(f"Qué evalúa: {p.get('que_evalua', '')}")
+                        st.markdown("**Esquema de respuesta:**")
+                        st.write(p.get("esquema_respuesta", ""))
+            except Exception as exc:  # noqa: BLE001
+                st.error(f"Error al generar el simulacro: {exc}")
