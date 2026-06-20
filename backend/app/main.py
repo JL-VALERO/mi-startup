@@ -6,11 +6,10 @@ Endpoints:
   POST /transcribe -> manuscrito/PIZARRA: texto con Claude visión (Lectura 14)
   POST /generate   -> simulacro de preguntas al estilo del profesor (Claude)
 """
-import io
+import base64
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from .ocr import extract_text
@@ -166,6 +165,7 @@ async def generate_pdf(req: GenerateRequest):
 
     from .claude_client import generate_guia_latex
     from .latex_pdf import LatexCompileError, LatexNotAvailable, build_pdf
+    from .pdf import pdf_render_images
 
     try:
         body = generate_guia_latex(
@@ -190,8 +190,11 @@ async def generate_pdf(req: GenerateRequest):
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Error al generar la guía: {exc}") from exc
 
-    return StreamingResponse(
-        io.BytesIO(pdf),
-        media_type="application/pdf",
-        headers={"Content-Disposition": 'attachment; filename="simulacro_rendir.pdf"'},
-    )
+    # Renderiza las páginas a imagen para una previsualización confiable en cualquier
+    # navegador (el <iframe> con data-URI lo bloquea Chrome). El PDF va aparte para descargar.
+    pages = [base64.b64encode(img).decode("utf-8")
+             for img in pdf_render_images(pdf, dpi=150, max_pages=12)]
+    return {
+        "pdf": base64.b64encode(pdf).decode("utf-8"),
+        "pages": pages,
+    }

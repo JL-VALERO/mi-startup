@@ -176,7 +176,7 @@ if "ocr_text" in st.session_state:
                     f"{BACKEND_URL}/generate_pdf", json=payload, timeout=600
                 )
                 if resp.status_code == 200:
-                    st.session_state["pdf"] = resp.content
+                    st.session_state["pdf"] = resp.json()
                 else:
                     try:
                         detail = resp.json().get("detail", resp.text)
@@ -220,7 +220,8 @@ if st.session_state.get("preguntas"):
 
 # --- Resultado: guía en PDF (estilo guía académica) ---
 if st.session_state.get("pdf"):
-    pdf_bytes = st.session_state["pdf"]
+    guia = st.session_state["pdf"]
+    pdf_bytes = base64.b64decode(guia["pdf"])
     st.divider()
     st.markdown("##### 📄 Tu guía en PDF (estilo del profesor)")
     st.download_button(
@@ -229,9 +230,6 @@ if st.session_state.get("pdf"):
         file_name="simulacro_rendir.pdf",
         mime="application/pdf",
     )
-    b64 = base64.b64encode(pdf_bytes).decode("utf-8")
-    st.markdown(
-        f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="600" '
-        'style="border:1px solid #ddd;border-radius:6px;"></iframe>',
-        unsafe_allow_html=True,
-    )
+    # Previsualización como imágenes de página (confiable en cualquier navegador).
+    for png_b64 in guia.get("pages", []):
+        st.image(base64.b64decode(png_b64), use_container_width=True)
