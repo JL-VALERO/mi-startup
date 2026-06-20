@@ -3,6 +3,7 @@
 Flujo: sube apuntes -> lee (Claude visión para manuscrito/pizarra, PaddleOCR para
 impreso) -> edita el texto -> genera un simulacro de preguntas al estilo del profe.
 """
+import base64
 import html
 import os
 
@@ -147,22 +148,44 @@ if "ocr_text" in st.session_state:
     )
     n = st.slider("Número de preguntas", 3, 10, 5)
 
-    if st.button("🧠 Generar simulacro al estilo del profe"):
+    payload = {
+        "content": st.session_state["ocr_text"],
+        "curso": curso,
+        "profesor": profesor,
+        "past_exam_text": examen_pasado or None,
+        "n": n,
+    }
+    col_a, col_b = st.columns(2)
+    gen_cards = col_a.button("🧠 Generar simulacro", use_container_width=True)
+    gen_pdf = col_b.button("📄 Generar guía en PDF", use_container_width=True)
+
+    if gen_cards:
         with st.spinner("Generando preguntas con Claude..."):
             try:
-                payload = {
-                    "content": st.session_state["ocr_text"],
-                    "curso": curso,
-                    "profesor": profesor,
-                    "past_exam_text": examen_pasado or None,
-                    "n": n,
-                }
                 resp = requests.post(f"{BACKEND_URL}/generate", json=payload, timeout=180)
                 resp.raise_for_status()
                 st.session_state["preguntas"] = resp.json()["preguntas"]
                 st.session_state["meta"] = {"curso": curso, "profesor": profesor}
             except Exception as exc:  # noqa: BLE001
                 st.error(f"Error al generar el simulacro: {exc}")
+
+    if gen_pdf:
+        with st.spinner("Generando la guía y compilando LaTeX… (la 1ra vez puede tardar)"):
+            try:
+                resp = requests.post(
+                    f"{BACKEND_URL}/generate_pdf", json=payload, timeout=600
+                )
+                if resp.status_code == 200:
+                    st.session_state["pdf"] = resp.content
+                else:
+                    try:
+                        detail = resp.json().get("detail", resp.text)
+                    except Exception:  # noqa: BLE001
+                        detail = resp.text
+                    st.session_state.pop("pdf", None)
+                    st.error(f"No se pudo generar el PDF: {detail}")
+            except Exception as exc:  # noqa: BLE001
+                st.error(f"Error al generar la guía: {exc}")
 
 # --- Resultado: simulacro como tarjetas (persiste entre interacciones) ---
 if st.session_state.get("preguntas"):
@@ -194,3 +217,21 @@ if st.session_state.get("preguntas"):
             )
             with st.expander("Ver esquema de respuesta"):
                 st.write(p.get("esquema_respuesta", ""))
+
+# --- Resultado: guía en PDF (estilo guía académica) ---
+if st.session_state.get("pdf"):
+    pdf_bytes = st.session_state["pdf"]
+    st.divider()
+    st.markdown("##### 📄 Tu guía en PDF (estilo del profesor)")
+    st.download_button(
+        "⬇️ Descargar guía (PDF)",
+        data=pdf_bytes,
+        file_name="simulacro_rendir.pdf",
+        mime="application/pdf",
+    )
+    b64 = base64.b64encode(pdf_bytes).decode("utf-8")
+    st.markdown(
+        f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="600" '
+        'style="border:1px solid #ddd;border-radius:6px;"></iframe>',
+        unsafe_allow_html=True,
+    )

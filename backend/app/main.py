@@ -6,8 +6,11 @@ Endpoints:
   POST /transcribe -> manuscrito/PIZARRA: texto con Claude visión (Lectura 14)
   POST /generate   -> simulacro de preguntas al estilo del profesor (Claude)
 """
+import io
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from .ocr import extract_text
@@ -149,3 +152,46 @@ async def generate(req: GenerateRequest):
         )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Error al generar: {exc}") from exc
+
+
+@app.post("/generate_pdf")
+async def generate_pdf(req: GenerateRequest):
+    """Genera una guía-simulacro RESUELTA en PDF (LaTeX, estilo guía académica).
+
+    Función local: requiere un motor LaTeX (pdflatex). En el deploy sin LaTeX
+    devuelve 503 para que el frontend degrade limpio.
+    """
+    if not req.content.strip():
+        raise HTTPException(status_code=400, detail="Falta el texto de los apuntes.")
+
+    from .claude_client import generate_guia_latex
+    from .latex_pdf import LatexCompileError, LatexNotAvailable, build_pdf
+
+    try:
+        body = generate_guia_latex(
+            content=req.content,
+            curso=req.curso,
+            profesor=req.profesor,
+            past_exam_text=req.past_exam_text,
+            n=req.n,
+        )
+        meta = {
+            "curso": req.curso,
+            "profesor": req.profesor,
+            "titulo": f"Simulacro — {req.curso}" if req.curso else "Simulacro de Examen",
+        }
+        pdf = build_pdf(body, meta)
+    except LatexNotAvailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except LatexCompileError as exc:
+        raise HTTPException(
+            status_code=502, detail=f"La compilación LaTeX falló:\n{exc}"
+        ) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Error al generar la guía: {exc}") from exc
+
+    return StreamingResponse(
+        io.BytesIO(pdf),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="simulacro_rendir.pdf"'},
+    )

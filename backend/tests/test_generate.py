@@ -25,3 +25,9 @@ def test_generate_requiere_cuerpo():
 def test_generate_rechaza_contenido_vacio():
     resp = client.post("/generate", json={"content": "   "})
     assert resp.status_code == 400
+
+
+def test_generate_pdf_requiere_contenido():
+    # Valida la entrada antes de llamar a Claude o compilar LaTeX.
+    resp = client.post("/generate_pdf", json={"content": "   "})
+    assert resp.status_code == 400

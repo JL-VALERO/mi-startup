@@ -164,3 +164,64 @@ def generate_simulacro(
     )
     parsed = json.loads(_first_text(resp))
     return {"preguntas": parsed["preguntas"]}
+
+
+# --- 3) Guía-simulacro resuelta en LaTeX (estilo guía académica) -----------
+
+_GUIA_PROMPT = r"""Eres el profesor del curso «{curso}» ({profesor}). A partir de los
+apuntes del alumno, redacta una GUÍA DE SIMULACRO con {n} problemas de DESARROLLO al
+estilo de preguntas de ESE profesor, CON sus soluciones, como una guía académica resuelta.
+
+Devuelve ÚNICAMENTE el CUERPO LaTeX (sin \documentclass, sin \usepackage, sin
+\begin{{document}}). Estructura por cada problema:
+  \section{{Problema k -- <título corto>}}
+  \subsection{{Enunciado}}   % puedes poner los datos en una tabla booktabs dentro de \begin{{teoria}}...\end{{teoria}}
+  \subsection{{Marco Teórico}}  % conceptos y fórmulas clave
+  \subsection{{Solución paso a paso}}  % usa align/equation; el RESULTADO final va en \begin{{respuesta}}...\end{{respuesta}}
+Y al final: \section{{Resumen General}} con una tabla booktabs que resuma los problemas.
+
+REGLAS ESTRICTAS (para que compile):
+- Solo usa: \section, \subsection, itemize/enumerate, tabular con booktabs
+  (\toprule \midrule \bottomrule), entornos `equation`/`align`, matemática con $...$,
+  \boxed, y los entornos ya definidos `respuesta` (caja de resultado) y `teoria` (caja sobria).
+- NO uses \usepackage, \definecolor, imágenes, \begin{{document}} ni colores propios.
+- Escapa correctamente caracteres especiales: % como \%, & como \& (salvo en tablas), _ como \_.
+- Todo en español. Matemática real y coherente con los apuntes.
+
+APUNTES DEL ALUMNO:
+{content}{estilo}
+"""
+
+
+def generate_guia_latex(
+    content: str,
+    curso: str = "",
+    profesor: str = "",
+    past_exam_text: str | None = None,
+    n: int = 4,
+) -> str:
+    """Devuelve SOLO el cuerpo LaTeX de una guía-simulacro resuelta."""
+    estilo = (
+        f"\n\nEXÁMENES PASADOS DE ESTE PROFESOR (imita su estilo y nivel):\n{past_exam_text}"
+        if past_exam_text
+        else ""
+    )
+    prompt = _GUIA_PROMPT.format(
+        curso=curso or "sin especificar",
+        profesor=profesor or "docente",
+        n=n,
+        content=content,
+        estilo=estilo,
+    )
+    resp = _client().messages.create(
+        model=ANTHROPIC_MODEL,
+        max_tokens=16000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    body = _first_text(resp).strip()
+    # Por si el modelo envuelve en bloque de código markdown.
+    if body.startswith("```"):
+        body = body.split("\n", 1)[1] if "\n" in body else body
+        if body.endswith("```"):
+            body = body.rsplit("```", 1)[0]
+    return body.strip()
