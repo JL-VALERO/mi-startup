@@ -16,9 +16,10 @@ Idealmente variados: que les fue bien y que les fue mal.
    - Sonda: ¿en qué momento sentiste que perdías el tiempo?
 3. **¿Lograste anticipar qué tipo de preguntas te iban a tomar? ¿Cómo?**
    - Sonda: ¿revisaste exámenes pasados del profe? ¿te sirvió? ¿de dónde los sacaste?
+   - Sonda (moat): ¿esos exámenes pasados los compartiste con alguien más de tu salón? ¿o alguien te los pasó a ti?
 4. **¿Usaste ChatGPT u otra herramienta para prepararte? ¿Para qué exactamente?**
-   - Sonda: ¿qué te funcionó y qué NO? ¿por qué dejaste de usarla / qué le faltó?
-5. **Si pudieras arreglar UNA sola cosa de cómo te preparas, ¿cuál sería?**
+   - Sonda: ¿qué te funcionó y qué NO? ¿hubo algo que querías hacer con ella y no pudiste?
+5. **¿Qué es lo último que hiciste, pagaste o instalaste para estudiar mejor, aunque al final no funcionara?**
    - Sonda de disposición a pagar: ¿alguna vez pagaste por material/clases/resúmenes? ¿cuánto?
 
 ## Plantilla de registro (copiar por entrevista)
@@ -28,7 +29,8 @@ Idealmente variados: que les fue bien y que les fue mal.
 - Mayor dolor:
 - ¿Anticipó preguntas? cómo:
 - Uso de ChatGPT/otros (qué falló):
-- El "arreglaría una cosa":
+- ¿Comparte/recibe exámenes pasados? (señal de moat):
+- Último que hizo/pagó/instaló para estudiar:
 - ¿Pagó algo antes? cuánto:
 - **Cita textual destacable:**
 - **¿Confirma o reta nuestra hipótesis?**
