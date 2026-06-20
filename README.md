@@ -36,7 +36,7 @@ te genera un **simulacro con el estilo de preguntas de ESE profesor**.
                            v
                  BD (profesor x curso x exámenes)  <-- semilla del moat
 ```
-Diagrama detallado en `docs/arquitectura.png`.
+Diagrama detallado: el esquema ASCII de arriba _(versión PNG en alta resolución: pendiente — Día 5)_.
 
 > **Por qué híbrido:** PaddleOCR es excelente con texto **impreso** (gratis, sin tokens) pero
 > falla con **letra a mano / pizarra**; ahí Claude visión lee mucho mejor. Enrutamos cada tipo
