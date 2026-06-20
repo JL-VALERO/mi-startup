@@ -34,11 +34,32 @@ def _resolve_backend_url() -> str:
 
 BACKEND_URL = _resolve_backend_url()
 
-st.set_page_config(page_title="Rendir.ai", page_icon="📝", layout="centered")
+st.set_page_config(
+    page_title="Rendir.ai — simulacros al estilo de tu profe",
+    page_icon="📝",
+    layout="centered",
+    menu_items={
+        "about": "Rendir.ai — convierte una foto de tus apuntes en un simulacro "
+        "de examen con el estilo de preguntas de tu propio profesor."
+    },
+)
 
+# Vista más limpia para el demo: oculta el menú/footer por defecto de Streamlit.
+st.markdown(
+    "<style>#MainMenu{visibility:hidden} footer{visibility:hidden}</style>",
+    unsafe_allow_html=True,
+)
+
+# --- Cabecera con identidad de marca ---
 st.title("📝 Rendir.ai")
-st.subheader("Convierte una foto de tus apuntes en un simulacro al estilo de tu profesor")
+st.markdown("##### Convierte una foto de tus apuntes en un simulacro al estilo de tu profesor")
+st.caption(
+    "Sube tus apuntes → los leemos (Claude visión para manuscrito/pizarra · PaddleOCR para "
+    "impreso) → generamos preguntas de desarrollo al estilo de **ESE** profesor."
+)
+st.divider()
 
+st.markdown("##### 📷 Paso 1 — Sube tus apuntes y léelos")
 with st.form("entrada"):
     col1, col2 = st.columns(2)
     curso = col1.text_input("Curso", placeholder="Ej. Microeconomía II")
@@ -78,6 +99,8 @@ if leer:
                 st.error(f"Error al leer la imagen: {exc}")
 
 if "ocr_text" in st.session_state:
+    st.divider()
+    st.markdown("##### ✏️ Paso 2 — Revisa el texto y genera tu simulacro")
     st.text_area(
         "Texto de tus apuntes (puedes editarlo antes de generar)",
         key="ocr_text",
@@ -105,10 +128,16 @@ if "ocr_text" in st.session_state:
                 preguntas = resp.json()["preguntas"]
                 st.success(f"✅ {len(preguntas)} preguntas generadas")
                 for i, p in enumerate(preguntas, 1):
-                    with st.expander(f"Pregunta {i} — {p.get('tema', '')}"):
-                        st.markdown(f"**{p['pregunta']}**")
-                        st.caption(f"Qué evalúa: {p.get('que_evalua', '')}")
-                        st.markdown("**Esquema de respuesta:**")
-                        st.write(p.get("esquema_respuesta", ""))
+                    with st.container(border=True):
+                        st.markdown(f"**{i}. {p['pregunta']}**")
+                        meta = []
+                        if p.get("tema"):
+                            meta.append(f"📚 {p['tema']}")
+                        if p.get("que_evalua"):
+                            meta.append(f"🎯 {p['que_evalua']}")
+                        if meta:
+                            st.caption("  ·  ".join(meta))
+                        with st.expander("Ver esquema de respuesta"):
+                            st.write(p.get("esquema_respuesta", ""))
             except Exception as exc:  # noqa: BLE001
                 st.error(f"Error al generar el simulacro: {exc}")
