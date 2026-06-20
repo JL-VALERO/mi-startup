@@ -56,32 +56,56 @@ _TRANSCRIBE_PROMPT = (
 )
 
 
-def transcribe_image(image_bytes: bytes, media_type: str = "image/png") -> dict:
-    """Lee una imagen de apuntes con Claude visión. Devuelve {text, topics}."""
-    data = base64.standard_b64encode(image_bytes).decode("utf-8")
+def _normalize_media_type(media_type: str) -> str:
+    """Claude acepta image/jpeg (no image/jpg). Normaliza el alias."""
+    return "image/jpeg" if media_type == "image/jpg" else media_type
+
+
+def transcribe_images(
+    items: list[tuple[bytes, str]], extra_text: str = ""
+) -> dict:
+    """Lee VARIAS imágenes de apuntes en UNA sola llamada a Claude visión.
+
+    Args:
+        items: lista de (image_bytes, media_type). Una sola llamada da mejor
+            contexto entre páginas y es más barata que N llamadas.
+        extra_text: texto ya extraído (p.ej. de un PDF digital) para integrar.
+    Returns:
+        {text, topics}
+    """
+    content: list[dict] = []
+    for image_bytes, media_type in items:
+        content.append(
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": _normalize_media_type(media_type),
+                    "data": base64.standard_b64encode(image_bytes).decode("utf-8"),
+                },
+            }
+        )
+    prompt = _TRANSCRIBE_PROMPT
+    if extra_text.strip():
+        prompt += (
+            "\n\nTEXTO YA EXTRAÍDO de otras páginas (intégralo en la transcripción "
+            f"final):\n{extra_text}"
+        )
+    content.append({"type": "text", "text": prompt})
+
     resp = _client().messages.create(
         model=ANTHROPIC_MODEL,
-        max_tokens=4000,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": data,
-                        },
-                    },
-                    {"type": "text", "text": _TRANSCRIBE_PROMPT},
-                ],
-            }
-        ],
+        max_tokens=8000,
+        messages=[{"role": "user", "content": content}],
         output_config={"format": {"type": "json_schema", "schema": _TRANSCRIBE_SCHEMA}},
     )
     parsed = json.loads(_first_text(resp))
     return {"text": parsed["transcription"], "topics": parsed.get("temas", [])}
+
+
+def transcribe_image(image_bytes: bytes, media_type: str = "image/png") -> dict:
+    """Wrapper de una sola imagen sobre `transcribe_images`."""
+    return transcribe_images([(image_bytes, media_type)])
 
 
 # --- 2) Generación del simulacro al estilo del profesor --------------------

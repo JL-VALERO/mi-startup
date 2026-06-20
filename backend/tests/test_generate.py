@@ -12,7 +12,7 @@ client = TestClient(app)
 
 def test_transcribe_rechaza_tipo_no_imagen():
     resp = client.post(
-        "/transcribe", files={"file": ("notas.txt", b"hola", "text/plain")}
+        "/transcribe", files={"files": ("notas.txt", b"hola", "text/plain")}
     )
     assert resp.status_code == 415
 
