@@ -56,32 +56,56 @@ _TRANSCRIBE_PROMPT = (
 )
 
 
-def transcribe_image(image_bytes: bytes, media_type: str = "image/png") -> dict:
-    """Lee una imagen de apuntes con Claude visión. Devuelve {text, topics}."""
-    data = base64.standard_b64encode(image_bytes).decode("utf-8")
+def _normalize_media_type(media_type: str) -> str:
+    """Claude acepta image/jpeg (no image/jpg). Normaliza el alias."""
+    return "image/jpeg" if media_type == "image/jpg" else media_type
+
+
+def transcribe_images(
+    items: list[tuple[bytes, str]], extra_text: str = ""
+) -> dict:
+    """Lee VARIAS imágenes de apuntes en UNA sola llamada a Claude visión.
+
+    Args:
+        items: lista de (image_bytes, media_type). Una sola llamada da mejor
+            contexto entre páginas y es más barata que N llamadas.
+        extra_text: texto ya extraído (p.ej. de un PDF digital) para integrar.
+    Returns:
+        {text, topics}
+    """
+    content: list[dict] = []
+    for image_bytes, media_type in items:
+        content.append(
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": _normalize_media_type(media_type),
+                    "data": base64.standard_b64encode(image_bytes).decode("utf-8"),
+                },
+            }
+        )
+    prompt = _TRANSCRIBE_PROMPT
+    if extra_text.strip():
+        prompt += (
+            "\n\nTEXTO YA EXTRAÍDO de otras páginas (intégralo en la transcripción "
+            f"final):\n{extra_text}"
+        )
+    content.append({"type": "text", "text": prompt})
+
     resp = _client().messages.create(
         model=ANTHROPIC_MODEL,
-        max_tokens=4000,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": data,
-                        },
-                    },
-                    {"type": "text", "text": _TRANSCRIBE_PROMPT},
-                ],
-            }
-        ],
+        max_tokens=8000,
+        messages=[{"role": "user", "content": content}],
         output_config={"format": {"type": "json_schema", "schema": _TRANSCRIBE_SCHEMA}},
     )
     parsed = json.loads(_first_text(resp))
     return {"text": parsed["transcription"], "topics": parsed.get("temas", [])}
+
+
+def transcribe_image(image_bytes: bytes, media_type: str = "image/png") -> dict:
+    """Wrapper de una sola imagen sobre `transcribe_images`."""
+    return transcribe_images([(image_bytes, media_type)])
 
 
 # --- 2) Generación del simulacro al estilo del profesor --------------------
@@ -140,3 +164,64 @@ def generate_simulacro(
     )
     parsed = json.loads(_first_text(resp))
     return {"preguntas": parsed["preguntas"]}
+
+
+# --- 3) Guía-simulacro resuelta en LaTeX (estilo guía académica) -----------
+
+_GUIA_PROMPT = r"""Eres el profesor del curso «{curso}» ({profesor}). A partir de los
+apuntes del alumno, redacta una GUÍA DE SIMULACRO con {n} problemas de DESARROLLO al
+estilo de preguntas de ESE profesor, CON sus soluciones, como una guía académica resuelta.
+
+Devuelve ÚNICAMENTE el CUERPO LaTeX (sin \documentclass, sin \usepackage, sin
+\begin{{document}}). Estructura por cada problema:
+  \section{{Problema k -- <título corto>}}
+  \subsection{{Enunciado}}   % puedes poner los datos en una tabla booktabs dentro de \begin{{teoria}}...\end{{teoria}}
+  \subsection{{Marco Teórico}}  % conceptos y fórmulas clave
+  \subsection{{Solución paso a paso}}  % usa align/equation; el RESULTADO final va en \begin{{respuesta}}...\end{{respuesta}}
+Y al final: \section{{Resumen General}} con una tabla booktabs que resuma los problemas.
+
+REGLAS ESTRICTAS (para que compile):
+- Solo usa: \section, \subsection, itemize/enumerate, tabular con booktabs
+  (\toprule \midrule \bottomrule), entornos `equation`/`align`, matemática con $...$,
+  \boxed, y los entornos ya definidos `respuesta` (caja de resultado) y `teoria` (caja sobria).
+- NO uses \usepackage, \definecolor, imágenes, \begin{{document}} ni colores propios.
+- Escapa correctamente caracteres especiales: % como \%, & como \& (salvo en tablas), _ como \_.
+- Todo en español. Matemática real y coherente con los apuntes.
+
+APUNTES DEL ALUMNO:
+{content}{estilo}
+"""
+
+
+def generate_guia_latex(
+    content: str,
+    curso: str = "",
+    profesor: str = "",
+    past_exam_text: str | None = None,
+    n: int = 4,
+) -> str:
+    """Devuelve SOLO el cuerpo LaTeX de una guía-simulacro resuelta."""
+    estilo = (
+        f"\n\nEXÁMENES PASADOS DE ESTE PROFESOR (imita su estilo y nivel):\n{past_exam_text}"
+        if past_exam_text
+        else ""
+    )
+    prompt = _GUIA_PROMPT.format(
+        curso=curso or "sin especificar",
+        profesor=profesor or "docente",
+        n=n,
+        content=content,
+        estilo=estilo,
+    )
+    resp = _client().messages.create(
+        model=ANTHROPIC_MODEL,
+        max_tokens=16000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    body = _first_text(resp).strip()
+    # Por si el modelo envuelve en bloque de código markdown.
+    if body.startswith("```"):
+        body = body.split("\n", 1)[1] if "\n" in body else body
+        if body.endswith("```"):
+            body = body.rsplit("```", 1)[0]
+    return body.strip()

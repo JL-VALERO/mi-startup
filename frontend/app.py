@@ -3,10 +3,25 @@
 Flujo: sube apuntes -> lee (Claude visión para manuscrito/pizarra, PaddleOCR para
 impreso) -> edita el texto -> genera un simulacro de preguntas al estilo del profe.
 """
+import base64
+import html
 import os
 
 import requests
 import streamlit as st
+
+
+def _simulacro_md(curso: str, profesor: str, preguntas: list[dict]) -> str:
+    """Compila el simulacro a Markdown para descargar."""
+    out = [f"# Simulacro — {curso or 'curso'} ({profesor or 'profesor'})", ""]
+    for i, p in enumerate(preguntas, 1):
+        out.append(f"## {i}. {p['pregunta']}")
+        if p.get("tema"):
+            out.append(f"- **Tema:** {p['tema']}")
+        if p.get("que_evalua"):
+            out.append(f"- **Evalúa:** {p['que_evalua']}")
+        out.append(f"\n**Esquema de respuesta:** {p.get('esquema_respuesta', '')}\n")
+    return "\n".join(out)
 
 try:
     from dotenv import load_dotenv
@@ -44,9 +59,21 @@ st.set_page_config(
     },
 )
 
-# Vista más limpia para el demo: oculta el menú/footer por defecto de Streamlit.
+# Vista más limpia + estilo de las tarjetas de pregunta (CSS mínimo y contenido).
 st.markdown(
-    "<style>#MainMenu{visibility:hidden} footer{visibility:hidden}</style>",
+    """
+    <style>
+      #MainMenu, footer {visibility: hidden;}
+      .q-head {display:flex; align-items:center; gap:.5rem; margin:.1rem 0 .35rem;}
+      .q-num {background:#F08C00; color:#fff; font-weight:700; border-radius:50%;
+              width:1.7rem; height:1.7rem; display:inline-flex; align-items:center;
+              justify-content:center; font-size:.9rem; flex:0 0 auto;}
+      .q-chip {background:#FBEEDD; color:#92400e; border:1px solid #F0C088;
+               border-radius:1rem; padding:.12rem .65rem; font-size:.78rem; font-weight:600;}
+      .q-text {font-size:1.06rem; font-weight:600; line-height:1.45; margin:.15rem 0;}
+      .q-eval {color:#6b5b4a; font-size:.9rem; margin-top:.2rem;}
+    </style>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -71,32 +98,40 @@ with st.form("entrada"):
         help="El manuscrito y la pizarra los lee Claude visión; lo impreso, PaddleOCR.",
     )
     apuntes = st.file_uploader(
-        "Sube una foto de tus apuntes (PNG o JPG)", type=["png", "jpg", "jpeg"]
+        "Sube una o varias fotos (PNG/JPG) o un PDF de tus apuntes",
+        type=["png", "jpg", "jpeg", "pdf"],
+        accept_multiple_files=True,
     )
     leer = st.form_submit_button("📷 Leer mis apuntes")
 
 if leer:
-    if apuntes is None:
-        st.warning("Primero sube una imagen de tus apuntes.")
+    if not apuntes:
+        st.warning("Primero sube al menos una foto o un PDF de tus apuntes.")
     else:
         endpoint = "/transcribe" if tipo.startswith("Manuscrito") else "/ocr"
-        with st.spinner(f"Leyendo tus apuntes ({'Claude visión' if endpoint == '/transcribe' else 'PaddleOCR'})..."):
+        motor = "Claude visión" if endpoint == "/transcribe" else "PaddleOCR"
+        with st.spinner(f"Leyendo {len(apuntes)} archivo(s) con {motor}..."):
             try:
-                files = {"file": (apuntes.name, apuntes.getvalue(), apuntes.type)}
-                resp = requests.post(f"{BACKEND_URL}{endpoint}", files=files, timeout=180)
+                files = [
+                    ("files", (f.name, f.getvalue(), f.type or "application/octet-stream"))
+                    for f in apuntes
+                ]
+                resp = requests.post(f"{BACKEND_URL}{endpoint}", files=files, timeout=300)
                 resp.raise_for_status()
                 data = resp.json()
                 st.session_state["ocr_text"] = data["text"]
                 if data.get("topics"):
                     st.caption("Temas detectados: " + ", ".join(data["topics"]))
-                st.success("✅ Texto leído. Revísalo abajo y genera tu simulacro.")
+                st.success(
+                    f"✅ {len(apuntes)} archivo(s) leído(s). Revisa el texto abajo y genera tu simulacro."
+                )
             except requests.exceptions.ConnectionError:
                 st.error(
                     f"No pude conectar con el backend en {BACKEND_URL}. "
                     "¿Está corriendo `uvicorn app.main:app`?"
                 )
             except Exception as exc:  # noqa: BLE001
-                st.error(f"Error al leer la imagen: {exc}")
+                st.error(f"Error al leer los apuntes: {exc}")
 
 if "ocr_text" in st.session_state:
     st.divider()
@@ -113,31 +148,88 @@ if "ocr_text" in st.session_state:
     )
     n = st.slider("Número de preguntas", 3, 10, 5)
 
-    if st.button("🧠 Generar simulacro al estilo del profe"):
+    payload = {
+        "content": st.session_state["ocr_text"],
+        "curso": curso,
+        "profesor": profesor,
+        "past_exam_text": examen_pasado or None,
+        "n": n,
+    }
+    col_a, col_b = st.columns(2)
+    gen_cards = col_a.button("🧠 Generar simulacro", use_container_width=True)
+    gen_pdf = col_b.button("📄 Generar guía en PDF", use_container_width=True)
+
+    if gen_cards:
         with st.spinner("Generando preguntas con Claude..."):
             try:
-                payload = {
-                    "content": st.session_state["ocr_text"],
-                    "curso": curso,
-                    "profesor": profesor,
-                    "past_exam_text": examen_pasado or None,
-                    "n": n,
-                }
                 resp = requests.post(f"{BACKEND_URL}/generate", json=payload, timeout=180)
                 resp.raise_for_status()
-                preguntas = resp.json()["preguntas"]
-                st.success(f"✅ {len(preguntas)} preguntas generadas")
-                for i, p in enumerate(preguntas, 1):
-                    with st.container(border=True):
-                        st.markdown(f"**{i}. {p['pregunta']}**")
-                        meta = []
-                        if p.get("tema"):
-                            meta.append(f"📚 {p['tema']}")
-                        if p.get("que_evalua"):
-                            meta.append(f"🎯 {p['que_evalua']}")
-                        if meta:
-                            st.caption("  ·  ".join(meta))
-                        with st.expander("Ver esquema de respuesta"):
-                            st.write(p.get("esquema_respuesta", ""))
+                st.session_state["preguntas"] = resp.json()["preguntas"]
+                st.session_state["meta"] = {"curso": curso, "profesor": profesor}
             except Exception as exc:  # noqa: BLE001
                 st.error(f"Error al generar el simulacro: {exc}")
+
+    if gen_pdf:
+        with st.spinner("Generando la guía y compilando LaTeX… (la 1ra vez puede tardar)"):
+            try:
+                resp = requests.post(
+                    f"{BACKEND_URL}/generate_pdf", json=payload, timeout=600
+                )
+                if resp.status_code == 200:
+                    st.session_state["pdf"] = resp.json()
+                else:
+                    try:
+                        detail = resp.json().get("detail", resp.text)
+                    except Exception:  # noqa: BLE001
+                        detail = resp.text
+                    st.session_state.pop("pdf", None)
+                    st.error(f"No se pudo generar el PDF: {detail}")
+            except Exception as exc:  # noqa: BLE001
+                st.error(f"Error al generar la guía: {exc}")
+
+# --- Resultado: simulacro como tarjetas (persiste entre interacciones) ---
+if st.session_state.get("preguntas"):
+    preguntas = st.session_state["preguntas"]
+    meta = st.session_state.get("meta", {})
+    st.divider()
+    head_l, head_r = st.columns([3, 1])
+    head_l.markdown(f"##### 🧠 Tu simulacro · {len(preguntas)} preguntas")
+    head_r.download_button(
+        "⬇️ Descargar",
+        data=_simulacro_md(meta.get("curso", ""), meta.get("profesor", ""), preguntas),
+        file_name="simulacro_rendir.md",
+        mime="text/markdown",
+        use_container_width=True,
+    )
+    for i, p in enumerate(preguntas, 1):
+        with st.container(border=True):
+            tema = html.escape(p.get("tema", ""))
+            pregunta = html.escape(p.get("pregunta", ""))
+            evalua = html.escape(p.get("que_evalua", ""))
+            chip = f"<span class='q-chip'>📚 {tema}</span>" if tema else ""
+            evalua_html = (
+                f"<div class='q-eval'>🎯 <b>Evalúa:</b> {evalua}</div>" if evalua else ""
+            )
+            st.markdown(
+                f"<div class='q-head'><span class='q-num'>{i}</span>{chip}</div>"
+                f"<div class='q-text'>{pregunta}</div>{evalua_html}",
+                unsafe_allow_html=True,
+            )
+            with st.expander("Ver esquema de respuesta"):
+                st.write(p.get("esquema_respuesta", ""))
+
+# --- Resultado: guía en PDF (estilo guía académica) ---
+if st.session_state.get("pdf"):
+    guia = st.session_state["pdf"]
+    pdf_bytes = base64.b64decode(guia["pdf"])
+    st.divider()
+    st.markdown("##### 📄 Tu guía en PDF (estilo del profesor)")
+    st.download_button(
+        "⬇️ Descargar guía (PDF)",
+        data=pdf_bytes,
+        file_name="simulacro_rendir.pdf",
+        mime="application/pdf",
+    )
+    # Previsualización como imágenes de página (confiable en cualquier navegador).
+    for png_b64 in guia.get("pages", []):
+        st.image(base64.b64decode(png_b64), use_container_width=True)
