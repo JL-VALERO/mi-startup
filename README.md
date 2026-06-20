@@ -36,7 +36,7 @@ te genera un **simulacro con el estilo de preguntas de ESE profesor**.
                            v
                  BD (profesor x curso x exámenes)  <-- semilla del moat
 ```
-Diagrama detallado en `docs/arquitectura.png`.
+Diagrama detallado: el esquema ASCII de arriba _(versión PNG en alta resolución: pendiente — Día 5)_.
 
 > **Por qué híbrido:** PaddleOCR es excelente con texto **impreso** (gratis, sin tokens) pero
 > falla con **letra a mano / pizarra**; ahí Claude visión lee mucho mejor. Enrutamos cada tipo
@@ -84,8 +84,13 @@ streamlit run app.py
 > `USE_GPU=true` en tu `.env`.
 
 ## Demo desplegado
-🔗 **URL pública:** _(pendiente — Día 3)_
+🔗 **App (pruébala sin instalar nada):** https://mi-startup-lmtgtvyvoyedk4rvirh25a.streamlit.app
+🧠 **API backend (FastAPI, inspeccionable):** https://rendir-ai-backend.onrender.com/docs
 🎥 **Video demo (2–3 min):** ver `docs/video_demo.md`
+
+> **Cómo probarlo:** abre la app → escribe curso y profesor → elige **Manuscrito / pizarra** →
+> sube una foto de apuntes → genera el simulacro. *(El backend en Render free se duerme tras
+> ~15 min de inactividad; la primera petición puede tardar ~50s mientras despierta.)*
 
 ## Estructura del repo
 ```
