@@ -61,20 +61,25 @@ async def ocr(files: list[UploadFile] = File(...)):
     from .pdf import pdf_extract, pdf_render_images
 
     textos: list[str] = []
+    sources: list[dict] = []
     try:
         for file in files:
             data = await file.read()
             if not data:
                 continue
+            name = file.filename or "archivo"
             if _is_pdf(file):
                 info = pdf_extract(data)
                 if not info["is_scanned"] and info["text"]:
                     textos.append(info["text"])  # PDF digital: texto directo, sin OCR
+                    sources.append({"name": name, "engine": "texto del PDF"})
                 else:
                     for img in pdf_render_images(data):
                         textos.append(extract_text(img)["text"])
+                    sources.append({"name": name, "engine": "PaddleOCR (PDF escaneado)"})
             elif file.content_type in ALLOWED_IMAGE_TYPES:
                 textos.append(extract_text(data)["text"])
+                sources.append({"name": name, "engine": "PaddleOCR"})
             else:
                 raise HTTPException(
                     status_code=415,
@@ -88,7 +93,7 @@ async def ocr(files: list[UploadFile] = File(...)):
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Error en OCR: {exc}") from exc
 
-    return {"text": "\n\n".join(t for t in textos if t)}
+    return {"text": "\n\n".join(t for t in textos if t), "sources": sources}
 
 
 @app.post("/transcribe")
@@ -103,18 +108,23 @@ async def transcribe(files: list[UploadFile] = File(...)):
 
     images: list[tuple[bytes, str]] = []
     extra_text: list[str] = []
+    sources: list[dict] = []
     for file in files:
         data = await file.read()
         if not data:
             continue
+        name = file.filename or "archivo"
         if _is_pdf(file):
             info = pdf_extract(data)
             if not info["is_scanned"] and info["text"]:
                 extra_text.append(info["text"])
+                sources.append({"name": name, "engine": "texto del PDF"})
             else:
                 images.extend((img, "image/png") for img in pdf_render_images(data))
+                sources.append({"name": name, "engine": "Claude visión (PDF escaneado)"})
         elif file.content_type in ALLOWED_IMAGE_TYPES:
             images.append((data, file.content_type))
+            sources.append({"name": name, "engine": "Claude visión"})
         else:
             raise HTTPException(
                 status_code=415,
@@ -126,12 +136,14 @@ async def transcribe(files: list[UploadFile] = File(...)):
         raise HTTPException(status_code=400, detail="No se recibió contenido legible.")
     # PDF digital sin imágenes: ya tenemos el texto, no hace falta llamar a Claude.
     if not images:
-        return {"text": joined_text, "topics": []}
+        return {"text": joined_text, "topics": [], "sources": sources}
 
     try:
-        return transcribe_images(images, extra_text=joined_text)
+        result = transcribe_images(images, extra_text=joined_text)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Error al transcribir: {exc}") from exc
+    result["sources"] = sources
+    return result
 
 
 @app.post("/generate")
