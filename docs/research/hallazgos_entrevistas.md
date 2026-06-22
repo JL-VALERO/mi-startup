@@ -30,6 +30,36 @@
 
 ---
 
+## El problema, validado
+
+> Resumen del problema tras la evidencia, en los términos que pide la rúbrica YC: *quién* lo sufre,
+> *qué tan doloroso* es, *cómo lo resuelven hoy* y con *qué evidencia*.
+
+- **Quién lo sufre (segmento / ICP):** estudiantes universitarios de **Economía y carreras afines**
+  (UP y similares) que llevan cursos con **examen de desarrollo** y en los que **circulan exámenes
+  pasados** del profesor entre alumnos. **7/7** entrevistados encajan en este perfil — no es "los
+  estudiantes" en general, sino este nicho donde el estilo del docente es predecible y heredable.
+
+- **Qué tan doloroso (cuantificado, sin inventar):** la preparación consume desde **unas pocas horas
+  hasta ~40 h por examen** según lo reportado — ~24 h en 2 semanas (J.H.), 3 h/día por ~2 semanas
+  (D.), 15–21 h en 3 días (C.), 4–5 h (S.), 1–2 h diarias (A.); J.V. y J.S. no lo cuantifican pero
+  reportan *"mucho tiempo"* y optimización muy ajustada. El dolor central no es solo el tiempo, sino
+  la **incertidumbre sobre el estilo de preguntas** ("no sabes exactamente qué te va a venir"), los
+  **errores de procedimiento** que arruinan un ejercicio entero, y el **tiempo muerto** (re-ver
+  clases grabadas, transporte).
+
+- **Cómo lo resuelven hoy (sin nosotros):** combinan **exámenes pasados heredados de terceros**
+  (compañeros, ciclos superiores, un amigo que ya llevó el curso) con **IA genérica** (ChatGPT,
+  Claude, Gemini, NotebookLM) que afinan a mano con prompt-engineering. Topan con límites reales:
+  planes gratuitos que no dejan subir imágenes (A.), respuestas dispersas hasta delimitar bien el
+  contexto (J.V.) y ejercicios donde la IA "se va por otra rama" (S.).
+
+- **Evidencia:** **7 entrevistas** (registro completo abajo) con **citas textuales**, bajo
+  metodología YC *"How to Talk to Users"* (se preguntó por el pasado y el presente, no por hipótesis
+  futuras). Audio y transcripciones se procesaron en local y **no se publican** (datos personales).
+
+---
+
 ## Registro por entrevista
 
 > Plantilla del guion (`guion_entrevistas.md`). Iniciales anonimizadas; fechas jun. 2026 (aprox.).
