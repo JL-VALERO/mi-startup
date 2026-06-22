@@ -39,6 +39,34 @@ def render_stepper(active: int) -> None:
     st.markdown(f"<div class='stepper'>{''.join(chips)}</div>", unsafe_allow_html=True)
 
 
+def leer_archivos(uploaded, endpoint: str) -> dict | None:
+    """Sube archivos al backend (/transcribe o /ocr) y devuelve su JSON, o None si falla.
+
+    Misma lógica de lectura para apuntes y para exámenes pasados.
+    """
+    files = [
+        ("files", (f.name, f.getvalue(), f.type or "application/octet-stream"))
+        for f in uploaded
+    ]
+    try:
+        resp = requests.post(f"{BACKEND_URL}{endpoint}", files=files, timeout=300)
+        resp.raise_for_status()
+        return resp.json()
+    except requests.exceptions.ConnectionError:
+        st.error(
+            f"No pude conectar con el backend en {BACKEND_URL}. "
+            "¿Está corriendo `uvicorn app.main:app`?"
+        )
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Error al leer los archivos: {exc}")
+    return None
+
+
+def _fmt_sources(sources: list) -> str:
+    """Formatea el desglose 'archivo -> motor' para mostrarlo en la UI."""
+    return " · ".join(f"**{s['name']}** → {s['engine']}" for s in sources)
+
+
 try:
     from dotenv import load_dotenv
 
@@ -291,32 +319,16 @@ if leer:
         endpoint = "/ocr" if es_impreso else "/transcribe"
         motor = "PaddleOCR" if es_impreso else ("lectura automática" if tipo.startswith("🔀") else "Claude visión")
         with st.spinner(f"Leyendo {len(apuntes)} archivo(s) con {motor}..."):
-            try:
-                files = [
-                    ("files", (f.name, f.getvalue(), f.type or "application/octet-stream"))
-                    for f in apuntes
-                ]
-                resp = requests.post(f"{BACKEND_URL}{endpoint}", files=files, timeout=300)
-                resp.raise_for_status()
-                data = resp.json()
-                st.session_state["ocr_text"] = data["text"]
-                if data.get("sources"):
-                    detalle = " · ".join(
-                        f"**{s['name']}** → {s['engine']}" for s in data["sources"]
-                    )
-                    st.caption("📥 Lectura por archivo: " + detalle)
-                if data.get("topics"):
-                    st.caption("🏷️ Temas detectados: " + ", ".join(data["topics"]))
-                st.success(
-                    f"✅ {len(apuntes)} archivo(s) leído(s). Revisa el texto abajo y genera tu simulacro."
-                )
-            except requests.exceptions.ConnectionError:
-                st.error(
-                    f"No pude conectar con el backend en {BACKEND_URL}. "
-                    "¿Está corriendo `uvicorn app.main:app`?"
-                )
-            except Exception as exc:  # noqa: BLE001
-                st.error(f"Error al leer los apuntes: {exc}")
+            data = leer_archivos(apuntes, endpoint)
+        if data:
+            st.session_state["ocr_text"] = data["text"]
+            if data.get("sources"):
+                st.caption("📥 Lectura por archivo: " + _fmt_sources(data["sources"]))
+            if data.get("topics"):
+                st.caption("🏷️ Temas detectados: " + ", ".join(data["topics"]))
+            st.success(
+                f"✅ {len(apuntes)} archivo(s) leído(s). Revisa el texto abajo y genera tu simulacro."
+            )
 
 if "ocr_text" in st.session_state:
     st.divider()
@@ -326,18 +338,44 @@ if "ocr_text" in st.session_state:
         key="ocr_text",
         height=250,
     )
+    st.markdown("**📑 Examen pasado del profe** (opcional — mejora el estilo)")
     examen_pasado = st.text_area(
-        "Examen pasado del profe (opcional — mejora el estilo)",
+        "Pega preguntas de exámenes anteriores…",
         placeholder="Pega aquí preguntas de exámenes anteriores de este profesor, si tienes.",
-        height=120,
+        height=110,
     )
+    examen_files = st.file_uploader(
+        "…o súbelo como fotos (PNG/JPG) y/o PDF — misma lectura mixta que los apuntes",
+        type=["png", "jpg", "jpeg", "pdf"],
+        accept_multiple_files=True,
+        key="examen_files",
+    )
+    if st.button("📎 Leer examen pasado") and examen_files:
+        with st.spinner(f"Leyendo {len(examen_files)} archivo(s) del examen pasado…"):
+            ex_data = leer_archivos(examen_files, "/transcribe")
+        if ex_data:
+            st.session_state["examen_ocr"] = ex_data["text"]
+            if ex_data.get("sources"):
+                st.caption("📥 Examen pasado: " + _fmt_sources(ex_data["sources"]))
+            st.success("✅ Examen pasado leído (se incluirá al generar).")
+    if st.session_state.get("examen_ocr"):
+        st.caption(
+            f"📑 Examen pasado cargado de archivos: {len(st.session_state['examen_ocr'])} caracteres."
+        )
+
     n = st.slider("Número de preguntas", 3, 10, 5)
 
+    # Combina el examen pasado PEGADO + el LEÍDO de archivos (fotos/PDF).
+    past_exam = "\n\n".join(
+        t.strip()
+        for t in [examen_pasado, st.session_state.get("examen_ocr", "")]
+        if t and t.strip()
+    )
     payload = {
         "content": st.session_state["ocr_text"],
         "curso": curso,
         "profesor": profesor,
-        "past_exam_text": examen_pasado or None,
+        "past_exam_text": past_exam or None,
         "n": n,
     }
     col_a, col_b = st.columns(2)
