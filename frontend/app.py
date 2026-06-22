@@ -264,12 +264,18 @@ with st.form("entrada"):
 
     tipo = st.radio(
         "Tipo de material",
-        ["Manuscrito / pizarra (Claude visión)", "Impreso / PDF (PaddleOCR)"],
-        help="El manuscrito y la pizarra los lee Claude visión; lo impreso, PaddleOCR.",
+        [
+            "🔀 Mixto / automático (recomendado)",
+            "✍️ Manuscrito / pizarra (Claude visión)",
+            "🖨️ Impreso / PDF (PaddleOCR)",
+        ],
+        help="Mixto lee todo junto: las fotos y los PDFs escaneados con Claude visión, "
+        "y los PDFs con texto se extraen directo (sin gastar tokens). Si TODO tu "
+        "material es impreso, PaddleOCR es gratis.",
         horizontal=True,
     )
     apuntes = st.file_uploader(
-        "Sube una o varias fotos (PNG/JPG) o un PDF de tus apuntes",
+        "Sube varias fotos (PNG/JPG) y/o PDFs (escaneados o con texto) — puedes mezclarlos",
         type=["png", "jpg", "jpeg", "pdf"],
         accept_multiple_files=True,
     )
@@ -279,8 +285,11 @@ if leer:
     if not apuntes:
         st.warning("Primero sube al menos una foto o un PDF de tus apuntes.")
     else:
-        endpoint = "/transcribe" if tipo.startswith("Manuscrito") else "/ocr"
-        motor = "Claude visión" if endpoint == "/transcribe" else "PaddleOCR"
+        # Mixto y Manuscrito usan Claude visión (lee fotos y escaneados); Impreso usa PaddleOCR.
+        # En ambos, los PDFs con texto se extraen directo sin gastar tokens.
+        es_impreso = tipo.startswith("🖨️")
+        endpoint = "/ocr" if es_impreso else "/transcribe"
+        motor = "PaddleOCR" if es_impreso else ("lectura automática" if tipo.startswith("🔀") else "Claude visión")
         with st.spinner(f"Leyendo {len(apuntes)} archivo(s) con {motor}..."):
             try:
                 files = [
@@ -291,8 +300,13 @@ if leer:
                 resp.raise_for_status()
                 data = resp.json()
                 st.session_state["ocr_text"] = data["text"]
+                if data.get("sources"):
+                    detalle = " · ".join(
+                        f"**{s['name']}** → {s['engine']}" for s in data["sources"]
+                    )
+                    st.caption("📥 Lectura por archivo: " + detalle)
                 if data.get("topics"):
-                    st.caption("Temas detectados: " + ", ".join(data["topics"]))
+                    st.caption("🏷️ Temas detectados: " + ", ".join(data["topics"]))
                 st.success(
                     f"✅ {len(apuntes)} archivo(s) leído(s). Revisa el texto abajo y genera tu simulacro."
                 )
