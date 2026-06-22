@@ -1,6 +1,11 @@
 # Material del curso / interno — NO publicar en el repo
 Instrucciones/
 
+# Entrevistas: audio y transcripciones (datos personales) — NUNCA subir
+docs/research/Entrevista/
+docs/research/_transcripciones_local/
+*.ogg
+
 # Secretos — NUNCA subir
 .env
 *.env

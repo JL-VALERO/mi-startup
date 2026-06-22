@@ -13,6 +13,9 @@ desarrollo** les tomará su profesor, y armar simulacros realistas a mano toma h
 ChatGPT no funciona bien porque (a) los apuntes están **a mano o en foto de pizarra** y (b) las
 preguntas que genera son **genéricas**, no al estilo del docente.
 
+> **Validado con 7 entrevistas** a estudiantes (metodología YC) → ver
+> [`docs/research/hallazgos_entrevistas.md`](docs/research/hallazgos_entrevistas.md).
+
 ## La solución (y el insight)
 Subes una **foto de tus apuntes** + opcionalmente **exámenes pasados del profesor**, y Rendir.ai
 te genera un **simulacro con el estilo de preguntas de ESE profesor**.
