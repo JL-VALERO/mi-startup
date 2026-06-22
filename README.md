@@ -90,6 +90,7 @@ streamlit run app.py
 🔗 **App (pruébala sin instalar nada):** https://mi-startup-lmtgtvyvoyedk4rvirh25a.streamlit.app
 🧠 **API backend (FastAPI, inspeccionable):** https://rendir-ai-backend.onrender.com/docs
 🎥 **Video demo (2–3 min):** ver `docs/video_demo.md`
+🖼️ **Capturas del flujo:** ver [`docs/capturas/`](docs/capturas/)
 
 > **Cómo probarlo:** abre la app → escribe curso y profesor → elige **Manuscrito / pizarra** →
 > sube una foto de apuntes → genera el simulacro. *(El backend en Render free se duerme tras
