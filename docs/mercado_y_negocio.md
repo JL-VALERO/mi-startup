@@ -4,8 +4,8 @@
 > pricing y **contribution margin** (costo real de tokens por simulacro).
 >
 > *Cifras de mercado de fuentes públicas (SUNEDU, CLACSO); supuestos de pricing y costos marcados
-> como tales. Tipo de cambio usado: **S/ 3.75 por US$**. Precios de tokens: tarifas oficiales de la
-> API de Claude (jun. 2026).*
+> como tales. Todas las cifras en **US$**. Precios de tokens: tarifas oficiales de la API de Claude
+> (jun. 2026).*
 
 ---
 
@@ -51,9 +51,9 @@ teórico para el TAM/SAM; el SOM usa una conversión a pago realista (~10%).*
 
 | Plan | Precio | Qué incluye | Para quién |
 |---|---|---|---|
-| **Free** | S/ 0 | 3 simulacros/mes, lectura de apuntes, marca de agua, sin PDF | Adquisición |
-| **Plus Estudiante** | **Mensual US$ 3.49** · **Anual US$ 26** (≈ S/ 13/mes · S/ 99/año) | Simulacros ilimitados, **PDF estilo guía**, subir examen pasado (foto/PDF), modo mixto | Estudiante activo en época de exámenes |
-| **B2B Academias** | **Desde S/ 8 por alumno/ciclo** (licencia) | Panel por curso, dataset del profesor, simulacros masivos, marca de la academia | Academias / centros de nivelación / facultades |
+| **Free** | US$ 0 | 3 simulacros/mes, lectura de apuntes, marca de agua, sin PDF | Adquisición |
+| **Plus Estudiante** | **Mensual US$ 3.49** · **Anual US$ 26** | Simulacros ilimitados, **PDF estilo guía**, subir examen pasado (foto/PDF), modo mixto | Estudiante activo en época de exámenes |
+| **B2B Academias** | **Desde US$ 2 por alumno/ciclo** (licencia) | Panel por curso, dataset del profesor, simulacros masivos, marca de la academia | Academias / centros de nivelación / facultades |
 
 *Precio anclado a la disposición a pagar observada: 3/7 entrevistados ya pagan ~US$ 20/mes por IA;
 el Plus a ~US$ 3.49/mes es una fracción de eso y se posiciona como "IA que te sube la nota", no como
@@ -70,19 +70,19 @@ gratis. PDF estilo LaTeX añade ~6,000 tokens de salida — ~duplica el costo de
 
 ### Costo variable por simulacro, según modelo
 
-| Modelo | Tarifa (in / out por 1M) | Costo por simulacro | En soles |
-|---|---|---|---|
-| **Haiku 4.5** | US$ 1 / US$ 5 | **US$ 0.024** | **S/ 0.09** |
-| **Sonnet 4.6** | US$ 3 / US$ 15 | **US$ 0.073** | **S/ 0.27** |
-| **Opus 4.8** | US$ 5 / US$ 25 | **US$ 0.121** | **S/ 0.45** |
+| Modelo | Tarifa (in / out por 1M) | Costo por simulacro |
+|---|---|---|
+| **Haiku 4.5** | US$ 1 / US$ 5 | **US$ 0.024** |
+| **Sonnet 4.6** | US$ 3 / US$ 15 | **US$ 0.073** |
+| **Opus 4.8** | US$ 5 / US$ 25 | **US$ 0.121** |
 
 ### Unit economics por usuario Plus (supuesto: 20 simulacros/mes)
 
 | Modelo en producción | Costo variable/mes | Ingreso Plus/mes | **Margen de contribución** |
 |---|---|---|---|
-| **Haiku 4.5** | US$ 0.48 (S/ 1.8) | US$ 3.4 (S/ 12.9) | **~86%** |
-| **Sonnet 4.6** | US$ 1.45 (S/ 5.4) | US$ 3.4 (S/ 12.9) | **~58%** |
-| **Opus 4.8** | US$ 2.42 (S/ 9.1) | US$ 3.4 (S/ 12.9) | ~29% (no rentable a uso alto) |
+| **Haiku 4.5** | US$ 0.48 | US$ 3.49 | **~86%** |
+| **Sonnet 4.6** | US$ 1.45 | US$ 3.49 | **~58%** |
+| **Opus 4.8** | US$ 2.42 | US$ 3.49 | ~29% (no rentable a uso alto) |
 
 **Decisión de margen:** producción en **Haiku/Sonnet** (margen 58–86%); **Opus** se reserva para la
 demo o un add-on premium. PaddleOCR cubre gratis el material impreso, bajando el costo promedio real.
