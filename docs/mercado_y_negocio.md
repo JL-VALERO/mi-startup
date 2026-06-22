@@ -52,12 +52,12 @@ teórico para el TAM/SAM; el SOM usa una conversión a pago realista (~10%).*
 | Plan | Precio | Qué incluye | Para quién |
 |---|---|---|---|
 | **Free** | S/ 0 | 3 simulacros/mes, lectura de apuntes, marca de agua, sin PDF | Adquisición |
-| **Plus Estudiante** | **S/ 12.90/mes** o **S/ 99/año** (~US$ 3.4/mes) | Simulacros ilimitados, **PDF estilo guía**, subir examen pasado (foto/PDF), modo mixto | Estudiante activo en época de exámenes |
+| **Plus Estudiante** | **Mensual US$ 3.49** · **Anual US$ 26** (≈ S/ 13/mes · S/ 99/año) | Simulacros ilimitados, **PDF estilo guía**, subir examen pasado (foto/PDF), modo mixto | Estudiante activo en época de exámenes |
 | **B2B Academias** | **Desde S/ 8 por alumno/ciclo** (licencia) | Panel por curso, dataset del profesor, simulacros masivos, marca de la academia | Academias / centros de nivelación / facultades |
 
 *Precio anclado a la disposición a pagar observada: 3/7 entrevistados ya pagan ~US$ 20/mes por IA;
-el Plus a ~US$ 3.4/mes es una fracción de eso y se posiciona como "IA que te sube la nota", no como
-"material".*
+el Plus a ~US$ 3.49/mes es una fracción de eso y se posiciona como "IA que te sube la nota", no como
+"material". El plan anual (US$ 26) ofrece ~2 meses gratis para incentivar permanencia.*
 
 ---
 
@@ -90,7 +90,47 @@ El margen mejora con caché de prompts y reuso del dataset por *(profesor × cur
 
 ---
 
-## 5. Supuestos y próximos pasos
+## 5. Autofinanciamiento — punto de equilibrio (margen 0) año 1
+
+> Meta: que los ingresos cubran **tokens (API) + infraestructura** en el año 1 (margen 0, el proyecto
+> se paga solo). No incluye sueldo del founder (proyecto solo-founder). Cifras en **US$**.
+
+**Costos fijos año 1:** ≈ **US$ 96** (Render Starter ~$7/mes + dominio ~$12/año; Streamlit free).
+**Costo variable:** tokens por simulacro (tabla §4); impreso con PaddleOCR = US$ 0.
+**Uso supuesto:** Free 3 sim/mes (36/año) · Plus 20 sim/mes (240/año) · ratio ~**10 Free : 1 pago**.
+
+### Aporte neto anual por usuario (ingreso − costo de sus tokens)
+
+| Modelo | Plan **mensual** (US$ 3.49 → 41.9/año) | Plan **anual** (US$ 26/año) | Costo de 1 Free/año |
+|---|---|---|---|
+| **Haiku** (tokens Plus $5.76/año) | **+US$ 36.1** | **+US$ 20.2** | −US$ 0.86 |
+| **Sonnet** (tokens Plus $17.5/año) | **+US$ 24.4** | **+US$ 8.5** | −US$ 2.63 |
+
+### Punto de equilibrio (Ingresos = US$ 96 + tokens), con 10 Free por cada pago
+
+| Modelo · plan | Ecuación | **Usuarios de pago para margen 0** |
+|---|---|---|
+| **Haiku · mensual** | 36.1·P = 96 + 8.6·P | **≈ 4 pagos** (~40 free) |
+| **Haiku · anual** | 20.2·P = 96 + 8.6·P | **≈ 9 pagos** (~90 free) |
+| **Sonnet · mensual** | 24.4·P = 96 + 26.3·P | no cierra (el free de 3/mes drena el margen) |
+| **Sonnet · anual** | 8.5·P = 96 + 26.3·P | no cierra → usar Haiku o free ≤ 1/mes |
+
+**Lectura:** con **Haiku**, el proyecto se autofinancia con **≈ 4–9 usuarios de pago** (según paguen
+mensual o anual) y ~40–90 gratuitos. Con Sonnet, el free de 3 sim/mes drena el margen: hay que
+acotar el free (~1/mes), subir conversión, o usar Haiku.
+
+### Precio "al costo" a escala SOM (margen 0 con 500 pago + 4,500 free, Haiku)
+Costo total año 1 ≈ tokens (4,500×$0.86 + 500×$5.76 = **US$ 6,766**) + infra **$96** = **~US$ 6,862**.
+÷ 500 pagos = **~US$ 13.7/año (≈ US$ 1.15/mes)** — el precio exacto de equilibrio, un plan
+estudiantil sin fines de lucro que solo cubre costos.
+
+**Conclusión:** el camino de margen 0 es **Haiku + PaddleOCR (impreso gratis) + free acotado**; con
+apenas **~4–9 suscriptores** el primer año ya se autofinancia, y todo lo demás es superávit
+reinvertible.
+
+---
+
+## 6. Supuestos y próximos pasos
 - Validar precio con una encuesta corta de disposición a pagar (las entrevistas ya dan señal).
 - Cerrar 1–2 pilotos B2B para probar el modelo de licencia por alumno.
 - Refinar consumo de tokens con datos reales del demo (medir tokens/simulacro en producción).
