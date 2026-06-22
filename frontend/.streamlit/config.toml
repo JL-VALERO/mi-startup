@@ -1,11 +1,12 @@
 # Tema de Rendir.ai — look cálido y legible (edtech estudiantil), no azul corporativo.
 # Mayor salto visual por el menor esfuerzo (Seccion 5 del plan de trabajo).
 [theme]
+base = "light"
 primaryColor = "#F08C00"            # ámbar cálido (botones, acentos)
 backgroundColor = "#FFFCF7"         # crema muy claro
 secondaryBackgroundColor = "#FBEEDD" # tarjetas / inputs
 textColor = "#2B2118"               # marrón oscuro, buen contraste
-font = "sans serif"
+font = "sans serif"                  # fallback; la fuente real (Inter/Sora) se carga por CSS
 
 [client]
 # Oculta la barra de herramientas de desarrollo para una vista más limpia en el demo.
