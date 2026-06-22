@@ -1,5 +1,7 @@
 # Guion de entrevistas — Rendir.ai
 
+> 📊 **Resultados:** la síntesis de las 7 entrevistas está en [`hallazgos_entrevistas.md`](hallazgos_entrevistas.md).
+
 > Objetivo: validar el problema **sin venderlo**. Escuchar, no convencer.
 > Meta del proyecto: **mínimo 5 entrevistas** documentadas aquí (rúbrica: 3 pts).
 > Regla YC ("How to Talk to Users"): pregunta por el **pasado y el presente**, no por hipótesis
