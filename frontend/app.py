@@ -23,6 +23,22 @@ def _simulacro_md(curso: str, profesor: str, preguntas: list[dict]) -> str:
         out.append(f"\n**Esquema de respuesta:** {p.get('esquema_respuesta', '')}\n")
     return "\n".join(out)
 
+
+def render_stepper(active: int) -> None:
+    """Barra de progreso de 3 pasos; resalta el paso activo (1..3)."""
+    pasos = [("1", "Sube apuntes"), ("2", "Lee con IA"), ("3", "Genera simulacro")]
+    chips = []
+    for i, (num, label) in enumerate(pasos, 1):
+        cls = "step done" if i < active else ("step active" if i == active else "step")
+        chips.append(
+            f"<div class='{cls}'><span class='step-n'>{num}</span>"
+            f"<span class='step-l'>{label}</span></div>"
+        )
+        if i < len(pasos):
+            chips.append("<span class='step-sep'></span>")
+    st.markdown(f"<div class='stepper'>{''.join(chips)}</div>", unsafe_allow_html=True)
+
+
 try:
     from dotenv import load_dotenv
 
@@ -59,32 +75,144 @@ st.set_page_config(
     },
 )
 
-# Vista más limpia + estilo de las tarjetas de pregunta (CSS mínimo y contenido).
+# --- Design system: fuentes, paleta, hero, stepper y estilo de componentes ---
 st.markdown(
     """
     <style>
-      #MainMenu, footer {visibility: hidden;}
-      .q-head {display:flex; align-items:center; gap:.5rem; margin:.1rem 0 .35rem;}
-      .q-num {background:#F08C00; color:#fff; font-weight:700; border-radius:50%;
-              width:1.7rem; height:1.7rem; display:inline-flex; align-items:center;
-              justify-content:center; font-size:.9rem; flex:0 0 auto;}
-      .q-chip {background:#FBEEDD; color:#92400e; border:1px solid #F0C088;
-               border-radius:1rem; padding:.12rem .65rem; font-size:.78rem; font-weight:600;}
-      .q-text {font-size:1.06rem; font-weight:600; line-height:1.45; margin:.15rem 0;}
-      .q-eval {color:#6b5b4a; font-size:.9rem; margin-top:.2rem;}
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap');
+
+      :root{
+        --amber:#F08C00; --amber-deep:#C2410C; --amber-soft:#FBEEDD;
+        --cream:#FFFCF7; --ink:#2B2118; --muted:#6b5b4a;
+        --line:#F2E4D0; --radius:16px;
+        --shadow:0 10px 30px rgba(120,72,0,.10); --shadow-sm:0 4px 14px rgba(120,72,0,.08);
+      }
+
+      /* Limpieza del chrome de Streamlit */
+      #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"]{
+        visibility:hidden; height:0;}
+
+      /* Tipografía y fondo */
+      html, body, [data-testid="stAppViewContainer"]{background:var(--cream);}
+      html, body, .stMarkdown, p, label, input, textarea, button{
+        font-family:'Inter',system-ui,-apple-system,sans-serif; color:var(--ink);}
+      h1,h2,h3,h4,h5,h6{
+        font-family:'Sora','Inter',sans-serif !important; color:var(--ink); letter-spacing:-.01em;}
+
+      /* Ancho legible + aire */
+      .block-container, .stMainBlockContainer{
+        max-width:780px; padding-top:1.1rem; padding-bottom:4rem;}
+
+      /* HERO de marca */
+      .hero{margin:-1.1rem -1.1rem 1.1rem; padding:2.1rem 1.7rem 1.7rem;
+        background:linear-gradient(135deg,#FFB347 0%,#F08C00 55%,#E06A00 100%);
+        border-radius:0 0 28px 28px; color:#fff; box-shadow:var(--shadow);}
+      .hero-row{display:flex; align-items:center; gap:.9rem;}
+      .hero-logo{flex:0 0 auto; width:56px; height:56px; background:rgba(255,255,255,.18);
+        border:1px solid rgba(255,255,255,.4); border-radius:16px;
+        display:flex; align-items:center; justify-content:center;}
+      .hero-name{font-family:'Sora',sans-serif; font-weight:800; font-size:2.05rem;
+        line-height:1; color:#fff;}
+      .hero-tag{margin-top:.6rem; font-size:1.08rem; font-weight:600; color:#fff;}
+      .hero-sub{margin-top:.25rem; font-size:.88rem; color:#fff; opacity:.9;}
+
+      /* STEPPER de progreso */
+      .stepper{display:flex; align-items:center; gap:.4rem; margin:.1rem 0 1.4rem; flex-wrap:wrap;}
+      .step{display:flex; align-items:center; gap:.45rem; padding:.32rem .75rem; border-radius:999px;
+        background:#fff; border:1px solid var(--line); color:var(--muted);
+        font-size:.82rem; font-weight:600;}
+      .step .step-n{width:1.35rem; height:1.35rem; border-radius:50%; display:inline-flex;
+        align-items:center; justify-content:center; background:#F0DCC0; color:var(--muted);
+        font-size:.76rem; font-weight:700;}
+      .step.active{background:var(--amber); border-color:var(--amber); color:#fff;
+        box-shadow:var(--shadow-sm);}
+      .step.active .step-n{background:#fff; color:var(--amber-deep);}
+      .step.done{background:var(--amber-soft); border-color:#F0C088; color:var(--amber-deep);}
+      .step.done .step-n{background:var(--amber); color:#fff;}
+      .step-sep{flex:1 1 14px; min-width:14px; height:2px; background:var(--line); border-radius:2px;}
+
+      /* Formulario como tarjeta */
+      [data-testid="stForm"]{background:#fff; border:1px solid var(--line);
+        border-radius:var(--radius); padding:1.3rem 1.3rem 1rem; box-shadow:var(--shadow-sm);}
+
+      /* Inputs */
+      .stTextInput input, .stTextArea textarea{border-radius:12px !important;}
+      .stTextInput input:focus, .stTextArea textarea:focus{
+        border-color:var(--amber) !important; box-shadow:0 0 0 3px rgba(240,140,0,.18) !important;}
+
+      /* Radio como segmented pills */
+      [data-testid="stRadio"] [role="radiogroup"]{gap:.5rem;}
+      [data-testid="stRadio"] label{background:#fff; border:1px solid var(--line);
+        border-radius:999px; padding:.35rem .95rem; transition:all .15s;}
+      [data-testid="stRadio"] label:hover{border-color:var(--amber);}
+
+      /* Dropzone del file uploader */
+      [data-testid="stFileUploaderDropzone"]{background:var(--amber-soft);
+        border:2px dashed var(--amber); border-radius:var(--radius);}
+
+      /* Botones píldora con hover-lift */
+      .stButton button, .stDownloadButton button, [data-testid="stFormSubmitButton"] button{
+        border-radius:999px !important; font-weight:700 !important; padding:.55rem 1.3rem !important;
+        transition:transform .12s ease, box-shadow .12s ease;}
+      .stButton button:hover, .stDownloadButton button:hover,
+      [data-testid="stFormSubmitButton"] button:hover{
+        transform:translateY(-2px); box-shadow:var(--shadow-sm);}
+
+      /* Tarjetas (st.container border=True) */
+      [data-testid="stVerticalBlockBorderWrapper"]{border-radius:var(--radius) !important;
+        border-color:var(--line) !important; box-shadow:var(--shadow-sm); transition:box-shadow .15s;}
+      [data-testid="stVerticalBlockBorderWrapper"]:hover{box-shadow:var(--shadow);}
+
+      /* Tarjeta de pregunta (contenido) */
+      .q-head{display:flex; align-items:center; gap:.5rem; margin:.1rem 0 .4rem;}
+      .q-num{background:var(--amber); color:#fff; font-weight:700; border-radius:50%;
+        width:1.7rem; height:1.7rem; display:inline-flex; align-items:center;
+        justify-content:center; font-size:.9rem; flex:0 0 auto;}
+      .q-chip{background:var(--amber-soft); color:var(--amber-deep); border:1px solid #F0C088;
+        border-radius:1rem; padding:.12rem .65rem; font-size:.78rem; font-weight:600;}
+      .q-text{font-size:1.08rem; font-weight:600; line-height:1.45; margin:.15rem 0; color:var(--ink);}
+      .q-eval{color:var(--muted); font-size:.9rem; margin-top:.25rem;}
+
+      /* Expander e imágenes del PDF */
+      [data-testid="stExpander"]{border-radius:12px !important; border-color:var(--line) !important;}
+      [data-testid="stImage"] img{border-radius:10px; box-shadow:var(--shadow-sm);
+        border:1px solid var(--line);}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# --- Cabecera con identidad de marca ---
-st.title("📝 Rendir.ai")
-st.markdown("##### Convierte una foto de tus apuntes en un simulacro al estilo de tu profesor")
-st.caption(
-    "Sube tus apuntes → los leemos (Claude visión para manuscrito/pizarra · PaddleOCR para "
-    "impreso) → generamos preguntas de desarrollo al estilo de **ESE** profesor."
+# --- Hero con identidad de marca (logo SVG inline para no romperse en la nube) ---
+st.markdown(
+    """
+    <div class="hero">
+      <div class="hero-row">
+        <div class="hero-logo">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+               xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="3" width="12" height="18" rx="2.5" fill="#fff"/>
+            <line x1="8" y1="8" x2="14" y2="8" stroke="#F08C00" stroke-width="1.5"
+                  stroke-linecap="round"/>
+            <line x1="8" y1="11.5" x2="14" y2="11.5" stroke="#F08C00" stroke-width="1.5"
+                  stroke-linecap="round"/>
+            <line x1="8" y1="15" x2="11.5" y2="15" stroke="#F08C00" stroke-width="1.5"
+                  stroke-linecap="round"/>
+            <path d="M18 4.6 l.75 1.75 1.75.75 -1.75.75 -.75 1.75 -.75 -1.75 -1.75 -.75
+                     1.75 -.75 z" fill="#FFE0A3"/>
+          </svg>
+        </div>
+        <div class="hero-name">Rendir.ai</div>
+      </div>
+      <div class="hero-tag">De una foto de tus apuntes a un simulacro al estilo de TU profesor.</div>
+      <div class="hero-sub">📷 Lee tu letra a mano · 🧠 genera preguntas de desarrollo · 📄 exporta en PDF</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
-st.divider()
+
+# Stepper: el paso activo se deriva del estado de la sesión.
+_active = 3 if st.session_state.get("preguntas") else (2 if "ocr_text" in st.session_state else 1)
+render_stepper(_active)
 
 st.markdown("##### 📷 Paso 1 — Sube tus apuntes y léelos")
 with st.form("entrada"):
@@ -96,6 +224,7 @@ with st.form("entrada"):
         "Tipo de material",
         ["Manuscrito / pizarra (Claude visión)", "Impreso / PDF (PaddleOCR)"],
         help="El manuscrito y la pizarra los lee Claude visión; lo impreso, PaddleOCR.",
+        horizontal=True,
     )
     apuntes = st.file_uploader(
         "Sube una o varias fotos (PNG/JPG) o un PDF de tus apuntes",
