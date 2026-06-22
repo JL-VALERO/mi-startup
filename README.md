@@ -91,20 +91,28 @@ streamlit run app.py
 🧠 **API backend (FastAPI, inspeccionable):** https://rendir-ai-backend.onrender.com/docs
 🎥 **Video demo (2–3 min):** ver `docs/video_demo.md`
 
-> **Cómo probarlo:** abre la app → escribe curso y profesor → elige **Manuscrito / pizarra** →
-> sube una foto de apuntes → genera el simulacro. *(El backend en Render free se duerme tras
+> **Cómo probarlo:** abre la app → escribe curso y profesor → en **Mixto / automático** (por
+> defecto) sube una o varias **fotos de apuntes y/o PDFs** (puedes mezclarlos) → *(opcional)* sube
+> un **examen pasado** en foto/PDF → genera el simulacro. *(El backend en Render free se duerme tras
 > ~15 min de inactividad; la primera petición puede tardar ~50s mientras despierta.)*
 
 ## Estructura del repo
 ```
-README.md  LICENSE  .env.example  .gitignore
-docs/        # pitch deck, diagrama, capturas, research (entrevistas)
-frontend/    # Streamlit
-backend/     # FastAPI (app/, tests/, requirements.txt)
-ai/          # prompts, agentes
-data/        # muestras chicas anonimizadas
-notebooks/   # EDA del estilo de preguntas
-.github/workflows/  # CI (lint + tests)
+README.md  LICENSE  .env.example  .gitignore  render.yaml  .devcontainer/
+docs/
+  research/        # guion + hallazgos de entrevistas (validación del problema)
+  capturas/        # capturas del flujo principal (galería del demo)
+  video_demo.md    # guion del video demo
+frontend/          # Streamlit — app.py (UI, modo claro/oscuro, lectura mixta)
+backend/           # FastAPI
+  app/             # main.py (endpoints), claude_client.py, ocr.py, pdf.py, latex_pdf.py, config.py
+  tests/           # pytest
+  requirements*.txt
+ai/                # prompts (transcribe, generate) + agentes
+data/              # muestras chicas anonimizadas
+notebooks/         # EDA del estilo de preguntas
+scripts/           # utilidades locales (p. ej. transcripción de entrevistas con Whisper)
+.github/workflows/ # CI (lint + tests)
 ```
 
 ## Construido con agentes de IA
