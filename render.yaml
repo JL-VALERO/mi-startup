@@ -1,23 +1,21 @@
 # Blueprint de despliegue del backend de Rendir.ai en Render (plan free).
 #
-# Deploy "solo-Claude": instala únicamente backend/requirements.txt (FastAPI + anthropic),
-# NO el stack de PaddleOCR (requirements-ocr.txt). Así /transcribe y /generate corren ligeros
-# y confiables en los 512 MB del plan free. /ocr (PaddleOCR) queda no-disponible en el deploy
-# por diseño y sigue corriendo en LOCAL (cubre el requisito de las 2 herramientas del curso).
+# Runtime DOCKER (backend/Dockerfile): la imagen trae LaTeX (pdflatex) para que
+# /generate_pdf (la guía en PDF) funcione también en el deploy, no solo en local.
+# Sigue siendo "solo-Claude": NO instala PaddleOCR (corre en local).
 #
-# La ANTHROPIC_API_KEY se ingresa en el panel de Render (sync: false), NUNCA en este archivo.
+# La ANTHROPIC_API_KEY se ingresa en el panel de Render (sync: false), NUNCA aquí.
 services:
   - type: web
     name: rendir-ai-backend
-    runtime: python
+    runtime: docker
     rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.9"
       - key: ANTHROPIC_MODEL
         value: claude-sonnet-4-6
       - key: OCR_LANG
