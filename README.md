@@ -91,6 +91,7 @@ streamlit run app.py
 🧠 **API backend (FastAPI, inspeccionable):** https://rendir-ai-backend.onrender.com/docs
 🎥 **Video demo (2–3 min):** ver `docs/video_demo.md`
 🖼️ **Capturas del flujo:** ver [`docs/capturas/`](docs/capturas/)
+📊 **Pitch deck (14 secciones YC):** ver [`docs/pitch_deck.pdf`](docs/pitch_deck.pdf)
 
 > **Cómo probarlo:** abre la app → escribe curso y profesor → **sube TODO tu material junto**
 > (fotos de apuntes y/o exámenes pasados, PDFs escaneados o con texto; la app clasifica cada archivo

@@ -1,0 +1,217 @@
+% Pitch Deck — Rendir.ai (14 secciones YC) · Beamer 16:9
+% Compilar DESDE docs/:  pdflatex pitch_deck.tex  (dos pasadas)
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sfdefault]{FiraSans}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\definecolor{amber}{HTML}{F08C00}
+\definecolor{amberdeep}{HTML}{C2410C}
+\definecolor{ink}{HTML}{2B2118}
+\definecolor{cream}{HTML}{FFFCF7}
+\definecolor{panel}{HTML}{FBEEDD}
+
+\setbeamercolor{normal text}{fg=ink,bg=cream}
+\setbeamercolor{frametitle}{fg=white,bg=amber}
+\setbeamercolor{structure}{fg=amber}
+\setbeamercolor{footcol}{fg=ink,bg=cream}
+\setbeamercolor{block title}{fg=white,bg=amber}
+\setbeamercolor{block body}{fg=ink,bg=panel}
+\setbeamerfont{frametitle}{series=\bfseries,size=\Large}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{\textcolor{amber}{\textbullet}}
+\setbeamertemplate{itemize subitem}{\textcolor{amberdeep}{\scriptsize\raisebox{0.2ex}{\textbf{--}}}}
+
+% Título de slide: banda ámbar con padding
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\paperwidth,ht=3.2ex,dp=1.4ex,leftskip=0.7cm,rightskip=0.7cm]{frametitle}
+    \insertframetitle
+  \end{beamercolorbox}%
+  \vspace{0.5em}
+}
+
+% Pie de página con marca + número de slide
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=3ex,dp=1.4ex,leftskip=0.7cm,rightskip=0.7cm]{footcol}%
+    {\color{amberdeep}\bfseries\small Rendir.ai}\hfill
+    {\color{ink}\small Jorge Luis Valer Osis\,·\,DS Python 2026-I (UP)}\hfill
+    {\color{ink}\small \insertframenumber\,/\,\inserttotalframenumber}%
+  \end{beamercolorbox}}%
+}
+
+\newcommand{\hi}[1]{\textcolor{amberdeep}{\textbf{#1}}}
+
+\begin{document}
+
+% ---------- 1 · PORTADA ----------
+\begin{frame}[plain]
+  \centering
+  \vfill
+  {\color{amber}\fontsize{52}{58}\selectfont\bfseries Rendir.ai}\\[0.5em]
+  {\Large\bfseries De una foto de tus apuntes a un simulacro al estilo de TU profesor.}\\[1.8em]
+  {\large Jorge Luis Valer Osis\, · \,Solo founder}\\[0.3em]
+  {\normalsize Proyecto Final — Data Science con Python 2026-I\, · \,Universidad del Pacífico}\\[1.2em]
+  {\color{amberdeep}\large\bfseries Pitch · 14 secciones estilo Y Combinator}
+  \vfill
+\end{frame}
+
+% ---------- 2 · FOUNDER ----------
+\begin{frame}{2 · Founder}
+  \large
+  \begin{itemize}
+    \item \hi{Jorge Luis Valer Osis} — solo founder. Estudiante UP: \textbf{soy el usuario, vivo el problema} (\emph{founder–market fit}).
+    \item Construido con \textbf{agentes de IA}: \hi{Claude Code} (CTO backend), Claude/Codex (frontend), crewAI (pipeline).
+    \item Una persona + agentes de IA = una startup funcional en semanas.
+  \end{itemize}
+\end{frame}
+
+% ---------- 3 · PROBLEMA ----------
+\begin{frame}{3 · Problema}
+  \large
+  \begin{itemize}
+    \item \textbf{Quién:} universitarios en cursos con \hi{examen de desarrollo}.
+    \item Estudian \textbf{``a ciegas''}: no saben qué \textbf{estilo} de preguntas tomará el profe.
+    \item Armar simulacros a mano toma \hi{horas}; ChatGPT genérico falla (apuntes a mano/pizarra + preguntas genéricas).
+    \item \emph{``No sabes exactamente qué te va a venir\ldots''} \, — \hi{validado con 7 entrevistas}.
+  \end{itemize}
+\end{frame}
+
+% ---------- 4 · SOLUCIÓN & INSIGHT ----------
+\begin{frame}{4 · Solución \& Insight}
+  \large
+  \begin{itemize}
+    \item Subes una \hi{foto de apuntes} (+ opcional un \textbf{examen pasado}) $\rightarrow$ \textbf{simulacro al estilo de ESE profesor}.
+    \item \hi{Insight:} en LatAm los exámenes son de desarrollo y \textbf{cada profesor tiene un estilo repetitivo y heredable}.
+    \item Modelamos al \textbf{docente}, no a ``un curso genérico''.
+  \end{itemize}
+\end{frame}
+
+% ---------- 5 · WHY NOW ----------
+\begin{frame}{5 · Why now}
+  \large
+  \begin{itemize}
+    \item LLMs baratos + \hi{Claude visión} lee manuscrito/pizarra (donde el OCR clásico falla).
+    \item \hi{PaddleOCR} gratis para material impreso (sin costo de tokens).
+    \item \hi{Claude Code} deja a una persona construir el producto en horas.
+    \item La ventana tecnológica es \textbf{ahora}.
+  \end{itemize}
+\end{frame}
+
+% ---------- 6 · MERCADO ----------
+\begin{frame}{6 · Mercado (TAM / SAM / SOM)}
+  \vspace{0.4em}
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}\centering
+      {\color{amber}\bfseries\Large TAM}\\[0.4em]
+      {\fontsize{30}{34}\selectfont\bfseries 30.9M}\\[0.3em]
+      universitarios en LatAm\\{\small\itshape (CLACSO)}
+    \end{column}
+    \begin{column}{0.32\textwidth}\centering
+      {\color{amber}\bfseries\Large SAM}\\[0.4em]
+      {\fontsize{30}{34}\selectfont\bfseries 720K}\\[0.3em]
+      Perú, carreras con examen de desarrollo\\{\small\itshape (SUNEDU)}
+    \end{column}
+    \begin{column}{0.32\textwidth}\centering
+      {\color{amber}\bfseries\Large SOM}\\[0.4em]
+      {\fontsize{30}{34}\selectfont\bfseries 5,000}\\[0.3em]
+      año 1 (UP + Lima)\\{\small\itshape + pilotos B2B}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------- 7 · COMPETENCIA & MOAT ----------
+\begin{frame}{7 · Competencia \& Moat}
+  \large
+  \begin{itemize}
+    \item vs \textbf{ChatGPT/NotebookLM}: genéricos, leen mal la foto, no modelan al profe. vs \textbf{hacerlo a mano}: horas.
+    \item \hi{Moat:} dataset propio por \emph{(profesor $\times$ curso)}. Cada examen subido \textbf{mejora la predicción} $\rightarrow$ efecto de red.
+    \item \textbf{Validado:} 4/7 entrevistados heredan exámenes pasados de terceros.
+  \end{itemize}
+\end{frame}
+
+% ---------- 8 · PRODUCTO ----------
+\begin{frame}{8 · Producto — demo + arquitectura}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}
+        \item \hi{Demo desplegado} (URL pública, sin instalar nada).
+        \item \textbf{Lector híbrido:} Claude visión (manuscrito) + PaddleOCR (impreso) $\rightarrow$ simulacro $\rightarrow$ PDF.
+        \item \textbf{Arquitectura:} Streamlit $\rightarrow$ FastAPI/Render $\rightarrow$ Claude API / PaddleOCR.
+        \item \hi{2 herramientas del curso:} Claude API + PaddleOCR.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}\centering
+      \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{capturas/06_pdf_contenido.png}\\[2pt]
+      {\scriptsize\color{ink} Guía-simulacro resuelta en PDF (estilo académico)}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------- 9 · MODELO DE NEGOCIO ----------
+\begin{frame}{9 · Modelo de negocio \& pricing}
+  \large
+  \begin{itemize}
+    \item \hi{Freemium + B2B academias.} Free / \textbf{Plus US\$\,3.49/mes} (o US\$\,26/año) / \textbf{B2B desde US\$\,2 por alumno-ciclo}.
+    \item \hi{Contribution margin 58–86\%} (Haiku/Sonnet); impreso = US\$\,0 (PaddleOCR).
+    \item \textbf{Se autofinancia con $\sim$4–9 usuarios de pago} (punto de equilibrio año 1).
+  \end{itemize}
+\end{frame}
+
+% ---------- 10 · GO-TO-MARKET ----------
+\begin{frame}{10 · Go-to-market}
+  \large
+  \begin{itemize}
+    \item \hi{10:} mi salón / facultad en la UP.
+    \item \hi{100:} boca a boca en grupos de WhatsApp por curso + facultades UP.
+    \item \hi{1,000:} otras universidades de Lima + pilotos B2B con academias.
+  \end{itemize}
+\end{frame}
+
+% ---------- 11 · TRACCIÓN ----------
+\begin{frame}{11 · Tracción / señales tempranas}
+  \large
+  \begin{itemize}
+    \item Demo \hi{desplegado y funcionando} (URL pública).
+    \item 7 entrevistas validan problema y moat.
+    \item Un entrevistado \textbf{ya hace Rendir.ai a mano} con ChatGPT $\rightarrow$ demanda real.
+    \item \emph{En curso:} 3 usuarios prueban el demo.
+  \end{itemize}
+\end{frame}
+
+% ---------- 12 · ROADMAP ----------
+\begin{frame}{12 · Roadmap}
+  \large
+  \begin{itemize}
+    \item \hi{3 meses:} pulir flujo + sembrar dataset \emph{(profesor $\times$ curso)} en 1 facultad UP.
+    \item \hi{6 meses:} piloto B2B con 1–2 academias; más universidades de Lima.
+    \item \hi{12 meses:} cobertura Perú + app móvil.
+  \end{itemize}
+\end{frame}
+
+% ---------- 13 · RIESGOS ----------
+\begin{frame}{13 · Riesgos \& mitigación}
+  \large
+  \begin{itemize}
+    \item \hi{Técnico} (calidad del simulacro): feedback loop + fine-tune con exámenes reales.
+    \item \hi{Mercado} (disposición a pagar): freemium para adquirir + B2B donde sí hay presupuesto.
+    \item \hi{Ejecución} (solo founder): agentes de IA + foco en UN flujo que funcione.
+  \end{itemize}
+\end{frame}
+
+% ---------- 14 · THE ASK ----------
+\begin{frame}{14 · The ask}
+  \large
+  \begin{itemize}
+    \item Buscamos \hi{100 estudiantes beta este ciclo + 1 academia piloto} para sembrar el dataset.
+    \item Eso desbloquea el \textbf{moat} \emph{(dataset por profesor $\times$ curso)} y las primeras señales de pago.
+  \end{itemize}
+  \vspace{1em}
+  \centering {\color{amberdeep}\Large\bfseries ``Make something people want.'' — Y Combinator}
+\end{frame}
+
+\end{document}
