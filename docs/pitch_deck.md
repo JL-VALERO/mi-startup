@@ -17,7 +17,7 @@ Construido con agentes de IA: **Claude Code** (CTO backend), Claude/Codex (front
 - *"No sabes exactamente qué te va a venir…"* (entrevista). **Validado con 7 entrevistas.**
 
 ### 4 · Solución & Insight
-Subes una **foto de apuntes** (+ opcional un **examen pasado**) → Rendir.ai genera un **simulacro al estilo de ESE profesor**.
+Subes **todo tu material junto** (apuntes + exámenes pasados) → Rendir.ai genera una **guía-simulacro al estilo de ESE profesor**.
 **Insight:** en LatAm los exámenes son de desarrollo y **cada profesor tiene un estilo repetitivo y heredable**. Modelamos al **docente**, no a "un curso genérico".
 
 ### 5 · Why now
@@ -34,7 +34,7 @@ LLMs baratos + **Claude visión** lee manuscrito/pizarra (donde el OCR clásico 
 
 ### 8 · Producto — demo + arquitectura
 - **Demo desplegado:** https://mi-startup-lmtgtvyvoyedk4rvirh25a.streamlit.app
-- **Lector híbrido:** Claude visión (manuscrito) + PaddleOCR (impreso) → genera simulacro → exporta PDF.
+- **Subes TODO junto** y la app **clasifica cada archivo** y usa la herramienta correcta (Claude visión para fotos/escaneados; texto directo para PDFs) → genera una **guía-simulacro resuelta en PDF**.
 - **Arquitectura:** Streamlit → FastAPI/Render → Claude API / PaddleOCR. **2 herramientas del curso:** Claude API + PaddleOCR.
 
 ### 9 · Modelo de negocio & pricing
