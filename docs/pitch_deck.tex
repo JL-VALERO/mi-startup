@@ -85,7 +85,7 @@
 \begin{frame}{4 · Solución \& Insight}
   \large
   \begin{itemize}
-    \item Subes una \hi{foto de apuntes} (+ opcional un \textbf{examen pasado}) $\rightarrow$ \textbf{simulacro al estilo de ESE profesor}.
+    \item Subes \hi{todo tu material junto} (apuntes + exámenes pasados) $\rightarrow$ \textbf{guía-simulacro al estilo de ESE profesor}.
     \item \hi{Insight:} en LatAm los exámenes son de desarrollo y \textbf{cada profesor tiene un estilo repetitivo y heredable}.
     \item Modelamos al \textbf{docente}, no a ``un curso genérico''.
   \end{itemize}
@@ -140,14 +140,14 @@
     \begin{column}{0.55\textwidth}
       \begin{itemize}
         \item \hi{Demo desplegado} (URL pública, sin instalar nada).
-        \item \textbf{Lector híbrido:} Claude visión (manuscrito) + PaddleOCR (impreso) $\rightarrow$ simulacro $\rightarrow$ PDF.
-        \item \textbf{Arquitectura:} Streamlit $\rightarrow$ FastAPI/Render $\rightarrow$ Claude API / PaddleOCR.
-        \item \hi{2 herramientas del curso:} Claude API + PaddleOCR.
+        \item \textbf{Subes TODO junto} y la app \hi{clasifica cada archivo} y usa la herramienta correcta (Claude visión para fotos/escaneados; texto directo para PDFs).
+        \item Genera una \hi{guía-simulacro resuelta en PDF} al estilo del profesor.
+        \item \textbf{Arquitectura:} Streamlit $\rightarrow$ FastAPI/Render $\rightarrow$ Claude API / PaddleOCR. \hi{2 herramientas del curso.}
       \end{itemize}
     \end{column}
     \begin{column}{0.45\textwidth}\centering
-      \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{capturas/06_pdf_contenido.png}\\[2pt]
-      {\scriptsize\color{ink} Guía-simulacro resuelta en PDF (estilo académico)}
+      \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{capturas/02_lectura_clasificacion.png}\\[2pt]
+      {\scriptsize\color{ink} La app clasifica cada archivo y lo lee con la herramienta correcta}
     \end{column}
   \end{columns}
 \end{frame}
