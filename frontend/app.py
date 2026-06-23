@@ -10,6 +10,19 @@ import requests
 import streamlit as st
 
 
+def _simulacro_md(curso: str, profesor: str, preguntas: list[dict]) -> str:
+    """Compila el simulacro a Markdown para descargar (fallback sin PDF)."""
+    out = [f"# Simulacro — {curso or 'curso'} ({profesor or 'profesor'})", ""]
+    for i, p in enumerate(preguntas, 1):
+        out.append(f"## {i}. {p['pregunta']}")
+        if p.get("tema"):
+            out.append(f"- **Tema:** {p['tema']}")
+        if p.get("que_evalua"):
+            out.append(f"- **Evalúa:** {p['que_evalua']}")
+        out.append(f"\n**Esquema de respuesta:** {p.get('esquema_respuesta', '')}\n")
+    return "\n".join(out)
+
+
 def render_stepper(active: int) -> None:
     """Barra de progreso de 3 pasos; resalta el paso activo (1..3)."""
     pasos = [("1", "Sube material"), ("2", "Lee con IA"), ("3", "Genera guía PDF")]
@@ -267,7 +280,7 @@ st.markdown(
 )
 
 # Stepper: el paso activo se deriva del estado de la sesión.
-_active = 3 if st.session_state.get("pdf") else (2 if "ocr_text" in st.session_state else 1)
+_active = 3 if (st.session_state.get("pdf") or st.session_state.get("preguntas")) else (2 if "ocr_text" in st.session_state else 1)
 render_stepper(_active)
 
 st.markdown("##### 📷 Paso 1 — Sube tu material y léelo")
@@ -324,25 +337,65 @@ if "ocr_text" in st.session_state:
         "past_exam_text": examen_pasado or None,
         "n": n,
     }
-    gen_pdf = st.button("📄 Generar guía en PDF", use_container_width=True)
+    gen = st.button("📄 Generar guía-simulacro", use_container_width=True)
 
-    if gen_pdf:
-        with st.spinner("Generando la guía y compilando LaTeX… (la 1ra vez puede tardar)"):
+    if gen:
+        st.session_state.pop("pdf", None)
+        st.session_state.pop("preguntas", None)
+        with st.spinner("Generando con Claude… (la 1ra vez puede tardar)"):
+            pdf_ok = False
             try:
-                resp = requests.post(
-                    f"{BACKEND_URL}/generate_pdf", json=payload, timeout=600
-                )
+                resp = requests.post(f"{BACKEND_URL}/generate_pdf", json=payload, timeout=600)
                 if resp.status_code == 200:
                     st.session_state["pdf"] = resp.json()
-                else:
-                    try:
-                        detail = resp.json().get("detail", resp.text)
-                    except Exception:  # noqa: BLE001
-                        detail = resp.text
-                    st.session_state.pop("pdf", None)
-                    st.error(f"No se pudo generar el PDF: {detail}")
-            except Exception as exc:  # noqa: BLE001
-                st.error(f"Error al generar la guía: {exc}")
+                    pdf_ok = True
+            except Exception:  # noqa: BLE001
+                pass
+            if not pdf_ok:
+                # El deploy no trae LaTeX: caemos al simulacro con /generate (solo Claude,
+                # sí corre en el servidor). En local, el PDF estilo LaTeX sí funciona.
+                try:
+                    r2 = requests.post(f"{BACKEND_URL}/generate", json=payload, timeout=180)
+                    r2.raise_for_status()
+                    st.session_state["preguntas"] = r2.json()["preguntas"]
+                    st.session_state["meta"] = {"curso": curso, "profesor": profesor}
+                    st.info(
+                        "Te mostramos el simulacro en pantalla. "
+                        "*(La guía en PDF estilo LaTeX está disponible en la versión local.)*"
+                    )
+                except requests.exceptions.ConnectionError:
+                    st.error(
+                        f"No pude conectar con el backend en {BACKEND_URL}. "
+                        "Puede estar despertando (~50s en Render free); reinténtalo."
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    st.error(f"No se pudo generar: {exc}")
+
+# --- Resultado: simulacro en pantalla (fallback cuando el deploy no tiene LaTeX) ---
+if st.session_state.get("preguntas"):
+    preguntas = st.session_state["preguntas"]
+    meta = st.session_state.get("meta", {})
+    st.divider()
+    st.markdown(f"##### 🧠 Tu simulacro · {len(preguntas)} preguntas")
+    st.download_button(
+        "⬇️ Descargar (.md)",
+        data=_simulacro_md(meta.get("curso", ""), meta.get("profesor", ""), preguntas),
+        file_name="simulacro_rendir.md",
+        mime="text/markdown",
+    )
+    for i, p in enumerate(preguntas, 1):
+        with st.container(border=True):
+            st.markdown(f"**{i}. {p.get('pregunta', '')}**")
+            _meta = " · ".join(
+                x for x in [
+                    f"📚 {p['tema']}" if p.get("tema") else "",
+                    f"🎯 {p['que_evalua']}" if p.get("que_evalua") else "",
+                ] if x
+            )
+            if _meta:
+                st.caption(_meta)
+            with st.expander("Ver esquema de respuesta"):
+                st.write(p.get("esquema_respuesta", ""))
 
 # --- Resultado: guía en PDF (estilo guía académica) ---
 if st.session_state.get("pdf"):
