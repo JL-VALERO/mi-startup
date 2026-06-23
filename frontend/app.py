@@ -4,29 +4,15 @@ Flujo: sube apuntes -> lee (Claude visión para manuscrito/pizarra, PaddleOCR pa
 impreso) -> edita el texto -> genera un simulacro de preguntas al estilo del profe.
 """
 import base64
-import html
 import os
 
 import requests
 import streamlit as st
 
 
-def _simulacro_md(curso: str, profesor: str, preguntas: list[dict]) -> str:
-    """Compila el simulacro a Markdown para descargar."""
-    out = [f"# Simulacro — {curso or 'curso'} ({profesor or 'profesor'})", ""]
-    for i, p in enumerate(preguntas, 1):
-        out.append(f"## {i}. {p['pregunta']}")
-        if p.get("tema"):
-            out.append(f"- **Tema:** {p['tema']}")
-        if p.get("que_evalua"):
-            out.append(f"- **Evalúa:** {p['que_evalua']}")
-        out.append(f"\n**Esquema de respuesta:** {p.get('esquema_respuesta', '')}\n")
-    return "\n".join(out)
-
-
 def render_stepper(active: int) -> None:
     """Barra de progreso de 3 pasos; resalta el paso activo (1..3)."""
-    pasos = [("1", "Sube apuntes"), ("2", "Lee con IA"), ("3", "Genera simulacro")]
+    pasos = [("1", "Sube material"), ("2", "Lee con IA"), ("3", "Genera guía PDF")]
     chips = []
     for i, (num, label) in enumerate(pasos, 1):
         cls = "step done" if i < active else ("step active" if i == active else "step")
@@ -274,52 +260,38 @@ st.markdown(
         <div class="hero-name">Rendir<span class="dot">.ai</span></div>
       </div>
       <div class="hero-tag">De una foto de tus apuntes a un simulacro al estilo de TU profesor.</div>
-      <div class="hero-sub">📷 Lee tu letra a mano · 🧠 genera preguntas de desarrollo · 📄 exporta en PDF</div>
+      <div class="hero-sub">📷 Lee tu letra a mano · 🧠 al estilo de tu profe · 📄 guía-simulacro en PDF</div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 # Stepper: el paso activo se deriva del estado de la sesión.
-_active = 3 if st.session_state.get("preguntas") else (2 if "ocr_text" in st.session_state else 1)
+_active = 3 if st.session_state.get("pdf") else (2 if "ocr_text" in st.session_state else 1)
 render_stepper(_active)
 
-st.markdown("##### 📷 Paso 1 — Sube tus apuntes y léelos")
+st.markdown("##### 📷 Paso 1 — Sube tu material y léelo")
 with st.form("entrada"):
     col1, col2 = st.columns(2)
     curso = col1.text_input("Curso", placeholder="Ej. Microeconomía II")
     profesor = col2.text_input("Profesor", placeholder="Ej. A. Quispe")
 
-    tipo = st.radio(
-        "Tipo de material",
-        [
-            "🔀 Mixto / automático (recomendado)",
-            "✍️ Manuscrito / pizarra (Claude visión)",
-            "🖨️ Impreso / PDF (PaddleOCR)",
-        ],
-        help="Mixto lee todo junto: las fotos y los PDFs escaneados con Claude visión, "
-        "y los PDFs con texto se extraen directo (sin gastar tokens). Si TODO tu "
-        "material es impreso, PaddleOCR es gratis.",
-        horizontal=True,
-    )
     apuntes = st.file_uploader(
-        "Sube varias fotos (PNG/JPG) y/o PDFs (escaneados o con texto) — puedes mezclarlos",
+        "Sube TODO tu material junto: fotos de apuntes y/o exámenes pasados, PDFs "
+        "(escaneados o con texto). La app clasifica cada archivo y usa la herramienta correcta.",
         type=["png", "jpg", "jpeg", "pdf"],
         accept_multiple_files=True,
     )
-    leer = st.form_submit_button("📷 Leer mis apuntes")
+    leer = st.form_submit_button("📷 Leer mi material")
 
 if leer:
     if not apuntes:
-        st.warning("Primero sube al menos una foto o un PDF de tus apuntes.")
+        st.warning("Primero sube al menos una foto o un PDF.")
     else:
-        # Mixto y Manuscrito usan Claude visión (lee fotos y escaneados); Impreso usa PaddleOCR.
-        # En ambos, los PDFs con texto se extraen directo sin gastar tokens.
-        es_impreso = tipo.startswith("🖨️")
-        endpoint = "/ocr" if es_impreso else "/transcribe"
-        motor = "PaddleOCR" if es_impreso else ("lectura automática" if tipo.startswith("🔀") else "Claude visión")
-        with st.spinner(f"Leyendo {len(apuntes)} archivo(s) con {motor}..."):
-            data = leer_archivos(apuntes, endpoint)
+        # Lectura automática: por archivo, PDF con texto -> directo (gratis);
+        # fotos y PDFs escaneados -> Claude visión.
+        with st.spinner(f"Leyendo {len(apuntes)} archivo(s) (lectura automática)..."):
+            data = leer_archivos(apuntes, "/transcribe")
         if data:
             st.session_state["ocr_text"] = data["text"]
             if data.get("sources"):
@@ -327,70 +299,32 @@ if leer:
             if data.get("topics"):
                 st.caption("🏷️ Temas detectados: " + ", ".join(data["topics"]))
             st.success(
-                f"✅ {len(apuntes)} archivo(s) leído(s). Revisa el texto abajo y genera tu simulacro."
+                f"✅ {len(apuntes)} archivo(s) leído(s). Revisa el texto abajo y genera tu guía."
             )
 
 if "ocr_text" in st.session_state:
     st.divider()
-    st.markdown("##### ✏️ Paso 2 — Revisa el texto y genera tu simulacro")
+    st.markdown("##### ✏️ Paso 2 — Revisa el texto y genera tu guía")
     st.text_area(
-        "Texto de tus apuntes (puedes editarlo antes de generar)",
+        "Texto leído de tu material (puedes editarlo antes de generar)",
         key="ocr_text",
         height=250,
     )
-    st.markdown("**📑 Examen pasado del profe** (opcional — mejora el estilo)")
     examen_pasado = st.text_area(
-        "Pega preguntas de exámenes anteriores…",
-        placeholder="Pega aquí preguntas de exámenes anteriores de este profesor, si tienes.",
+        "📑 Examen pasado del profe — opcional (pega preguntas de exámenes anteriores; mejora el estilo)",
+        placeholder="Opcional: pega aquí preguntas de exámenes anteriores de este profesor.",
         height=110,
     )
-    examen_files = st.file_uploader(
-        "…o súbelo como fotos (PNG/JPG) y/o PDF — misma lectura mixta que los apuntes",
-        type=["png", "jpg", "jpeg", "pdf"],
-        accept_multiple_files=True,
-        key="examen_files",
-    )
-    if st.button("📎 Leer examen pasado") and examen_files:
-        with st.spinner(f"Leyendo {len(examen_files)} archivo(s) del examen pasado…"):
-            ex_data = leer_archivos(examen_files, "/transcribe")
-        if ex_data:
-            st.session_state["examen_ocr"] = ex_data["text"]
-            if ex_data.get("sources"):
-                st.caption("📥 Examen pasado: " + _fmt_sources(ex_data["sources"]))
-            st.success("✅ Examen pasado leído (se incluirá al generar).")
-    if st.session_state.get("examen_ocr"):
-        st.caption(
-            f"📑 Examen pasado cargado de archivos: {len(st.session_state['examen_ocr'])} caracteres."
-        )
+    n = st.slider("Número de problemas en la guía", 3, 10, 5)
 
-    n = st.slider("Número de preguntas", 3, 10, 5)
-
-    # Combina el examen pasado PEGADO + el LEÍDO de archivos (fotos/PDF).
-    past_exam = "\n\n".join(
-        t.strip()
-        for t in [examen_pasado, st.session_state.get("examen_ocr", "")]
-        if t and t.strip()
-    )
     payload = {
         "content": st.session_state["ocr_text"],
         "curso": curso,
         "profesor": profesor,
-        "past_exam_text": past_exam or None,
+        "past_exam_text": examen_pasado or None,
         "n": n,
     }
-    col_a, col_b = st.columns(2)
-    gen_cards = col_a.button("🧠 Generar simulacro", use_container_width=True)
-    gen_pdf = col_b.button("📄 Generar guía en PDF", use_container_width=True)
-
-    if gen_cards:
-        with st.spinner("Generando preguntas con Claude..."):
-            try:
-                resp = requests.post(f"{BACKEND_URL}/generate", json=payload, timeout=180)
-                resp.raise_for_status()
-                st.session_state["preguntas"] = resp.json()["preguntas"]
-                st.session_state["meta"] = {"curso": curso, "profesor": profesor}
-            except Exception as exc:  # noqa: BLE001
-                st.error(f"Error al generar el simulacro: {exc}")
+    gen_pdf = st.button("📄 Generar guía en PDF", use_container_width=True)
 
     if gen_pdf:
         with st.spinner("Generando la guía y compilando LaTeX… (la 1ra vez puede tardar)"):
@@ -409,37 +343,6 @@ if "ocr_text" in st.session_state:
                     st.error(f"No se pudo generar el PDF: {detail}")
             except Exception as exc:  # noqa: BLE001
                 st.error(f"Error al generar la guía: {exc}")
-
-# --- Resultado: simulacro como tarjetas (persiste entre interacciones) ---
-if st.session_state.get("preguntas"):
-    preguntas = st.session_state["preguntas"]
-    meta = st.session_state.get("meta", {})
-    st.divider()
-    head_l, head_r = st.columns([3, 1])
-    head_l.markdown(f"##### 🧠 Tu simulacro · {len(preguntas)} preguntas")
-    head_r.download_button(
-        "⬇️ Descargar",
-        data=_simulacro_md(meta.get("curso", ""), meta.get("profesor", ""), preguntas),
-        file_name="simulacro_rendir.md",
-        mime="text/markdown",
-        use_container_width=True,
-    )
-    for i, p in enumerate(preguntas, 1):
-        with st.container(border=True):
-            tema = html.escape(p.get("tema", ""))
-            pregunta = html.escape(p.get("pregunta", ""))
-            evalua = html.escape(p.get("que_evalua", ""))
-            chip = f"<span class='q-chip'>📚 {tema}</span>" if tema else ""
-            evalua_html = (
-                f"<div class='q-eval'>🎯 <b>Evalúa:</b> {evalua}</div>" if evalua else ""
-            )
-            st.markdown(
-                f"<div class='q-head'><span class='q-num'>{i}</span>{chip}</div>"
-                f"<div class='q-text'>{pregunta}</div>{evalua_html}",
-                unsafe_allow_html=True,
-            )
-            with st.expander("Ver esquema de respuesta"):
-                st.write(p.get("esquema_respuesta", ""))
 
 # --- Resultado: guía en PDF (estilo guía académica) ---
 if st.session_state.get("pdf"):
