@@ -1,27 +1,29 @@
 # Capturas del flujo — Rendir.ai
 
-Capturas (de un usuario real) del flujo principal de Rendir.ai, tomadas sobre la app en modo oscuro.
-Curso de ejemplo: **Teoría Bancaria**.
+Capturas del flujo principal (de un usuario real), en modo claro. Curso de ejemplo: **Banca**.
 
 🔗 Demo en vivo: https://mi-startup-lmtgtvyvoyedk4rvirh25a.streamlit.app
 
-### 1 · Inicio y subida mixta
-![Inicio y entrada](01_inicio_y_entrada.png)
-Curso y profesor + **subida mixta**: varias fotos de apuntes y/o PDFs a la vez (modo automático).
+### 1 · Subida única (sin selector de tipo)
+![Subida única](01_subida_unica.png)
+Escribes curso y profesor y subes **todo tu material junto** en un solo uploader: fotos de apuntes
+**y** exámenes pasados, fotos **y** PDFs. Ya no hay que elegir el tipo de material.
 
-### 2 · Lectura de los apuntes
-![Lectura de apuntes](02_lectura_apuntes.png)
-El texto extraído de las fotos con el **lector híbrido** (Claude visión para manuscrito/pizarra).
+### 2 · Lectura + clasificación automática
+![Lectura y clasificación](02_lectura_clasificacion.png)
+La app **clasifica cada archivo y usa la herramienta correcta**: la línea *"Lectura por archivo"*
+muestra el motor de cada uno (Claude visión para fotos/escaneados, texto directo para PDFs con
+texto), más los temas detectados.
 
-### 3 · Examen pasado del profe (PDF)
-![Examen pasado](03_examen_pasado.png)
-El examen pasado se sube como **PDF** (o fotos) y se lee con la misma lógica mixta — mejora el estilo del simulacro.
+### 3 · Examen pasado (opcional)
+![Examen pasado opcional](03_examen_opcional.png)
+Bandeja **opcional** para pegar texto de un examen pasado del profesor — mejora la fidelidad al
+estilo. No es un paso obligatorio.
 
-### 4 · Simulacro generado
-![Simulacro](04_simulacro.png)
-Preguntas de **desarrollo al estilo del profesor**, con tema y qué evalúa cada una.
+### 4 · Generar la guía en PDF
+![Generar guía PDF](04_generar_pdf.png)
+Un solo botón **"Generar guía en PDF"** produce la guía-simulacro resuelta al estilo del profesor.
 
-### 5 · Guía-simulacro en PDF
-![Guía PDF — portada](05_pdf.png)
-![Guía PDF — contenido](06_pdf_contenido.png)
-La guía **resuelta** exportada en PDF con estilo académico (portada + problemas con enunciado, marco teórico y solución).
+### 5 · Contenido del PDF (estilo académico)
+![Contenido del PDF](06_pdf_contenido.png)
+La guía **resuelta** en PDF (LaTeX): enunciado, marco teórico y solución paso a paso.

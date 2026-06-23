@@ -92,10 +92,11 @@ streamlit run app.py
 🎥 **Video demo (2–3 min):** ver `docs/video_demo.md`
 🖼️ **Capturas del flujo:** ver [`docs/capturas/`](docs/capturas/)
 
-> **Cómo probarlo:** abre la app → escribe curso y profesor → en **Mixto / automático** (por
-> defecto) sube una o varias **fotos de apuntes y/o PDFs** (puedes mezclarlos) → *(opcional)* sube
-> un **examen pasado** en foto/PDF → genera el simulacro. *(El backend en Render free se duerme tras
-> ~15 min de inactividad; la primera petición puede tardar ~50s mientras despierta.)*
+> **Cómo probarlo:** abre la app → escribe curso y profesor → **sube TODO tu material junto**
+> (fotos de apuntes y/o exámenes pasados, PDFs escaneados o con texto; la app clasifica cada archivo
+> y usa la herramienta correcta) → *(opcional)* pega texto de un examen pasado → **genera la guía en
+> PDF**. *(El backend en Render free se duerme tras ~15 min de inactividad; la primera petición puede
+> tardar ~50s mientras despierta.)*
 
 ## Estructura del repo
 ```
