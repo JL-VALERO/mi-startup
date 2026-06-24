@@ -8,7 +8,7 @@
 
 ### 2 · Founder
 Solo founder: **Jorge Luis Valer Osis**, estudiante UP — soy el usuario, vivo el problema (*founder–market fit*).
-Construido con agentes de IA: **Claude Code** (CTO backend), Claude/Codex (frontend), crewAI (pipeline).
+Construido con agentes de IA: **Claude Code** (CTO backend), Claude/Codex (frontend).
 
 ### 3 · Problema
 - **Quién:** universitarios en cursos con **examen de desarrollo**.
