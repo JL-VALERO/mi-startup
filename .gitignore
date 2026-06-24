@@ -1,9 +1,13 @@
 # Material del curso / interno — NO publicar en el repo
 Instrucciones/
 
-# Entrevistas: audio y transcripciones (datos personales) — NUNCA subir
+# Entrevistas y prueba de demo: audio/notas crudas y transcripciones (datos
+# personales) — NUNCA subir. El feedback redactado y anonimizado va en
+# docs/research/feedback_demo.md (ese SÍ se versiona).
 docs/research/Entrevista/
+docs/research/Demo/
 docs/research/_transcripciones_local/
+docs/research/_guia_*.txt
 *.ogg
 
 # Secretos — NUNCA subir
