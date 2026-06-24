@@ -52,7 +52,6 @@ te genera un **simulacro con el estilo de preguntas de ESE profesor**.
 |---|---|---|---|
 | **Claude API (visión + generación)** | 14 | `backend/app/claude_client.py` (`/transcribe`, `/generate`) | Lee manuscrito/pizarra y genera el simulacro al estilo del profesor |
 | **PaddleOCR** | 14 | `backend/app/ocr.py` (`/ocr`) | OCR de material impreso/PDF en español, gratis y sin costo de tokens |
-| **crewAI** *(opcional)* | 10–11 | `ai/agents/` | Orquestar pipeline: leer → analizar estilo → generar → corregir |
 
 ## Cómo correr (local)
 
@@ -113,7 +112,7 @@ backend/           # FastAPI
   app/             # main.py (endpoints), claude_client.py, ocr.py, pdf.py, latex_pdf.py, config.py
   tests/           # pytest
   requirements*.txt
-ai/                # prompts (transcribe, generate) + agentes
+ai/                # prompts (transcribe, generate)
 data/              # muestras chicas anonimizadas
 notebooks/         # EDA del estilo de preguntas
 scripts/           # utilidades locales (p. ej. transcripción de entrevistas con Whisper)
@@ -121,7 +120,7 @@ scripts/           # utilidades locales (p. ej. transcripción de entrevistas co
 ```
 
 ## Construido con agentes de IA
-Repo asistido con **Claude Code** (CTO backend), Claude/Codex (frontend) y crewAI (pipeline IA).
+Repo asistido con **Claude Code** (CTO backend) y Claude/Codex (frontend).
 
 ## Licencia
 MIT — ver `LICENSE`.
