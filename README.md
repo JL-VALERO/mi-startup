@@ -90,7 +90,7 @@ streamlit run app.py
 ## Demo desplegado
 🔗 **App (pruébala sin instalar nada):** https://mi-startup-lmtgtvyvoyedk4rvirh25a.streamlit.app
 🧠 **API backend (FastAPI, inspeccionable):** https://rendir-ai-backend.onrender.com/docs
-🎥 **Video demo (2–3 min):** ver `docs/video_demo.md`
+🎥 **Video demo (2–3 min):** [ver en Drive](https://drive.google.com/file/d/1k95cF7SYhDxElduFXnFscAsWIWOlt3ve/view?usp=drive_link) · guion en `docs/video_demo.md`
 🖼️ **Capturas del flujo:** ver [`docs/capturas/`](docs/capturas/)
 📊 **Pitch deck (14 secciones YC):** ver [`docs/pitch_deck.pdf`](docs/pitch_deck.pdf)
 
